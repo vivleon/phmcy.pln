@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 약국 운영 OS - 사업계획서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans KR"', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#1e40af', light: '#f3f4f6' }
+                }
+            }
+        }
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body { scroll-behavior: smooth; }
+        .nav-link:hover { color: #2563eb; transition: color 0.3s ease; }
+        .table-header { background-color: #2563eb; color: white; }
+        .card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        pre.wireframe { background-color: #1e293b; color: #38bdf8; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-family: monospace; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <nav class="fixed w-64 h-screen bg-white shadow-xl flex flex-col hidden md:flex z-50">
+        <div class="p-6 bg-primary text-white text-2xl font-bold tracking-tight">
+            <i class="fa-solid fa-pills mr-2"></i> SmartRx OS
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-2 px-4 text-sm font-medium text-gray-600">
+                <li class="uppercase text-xs text-gray-400 font-bold mb-2 mt-4">Part A. 요약본</li>
+                <li><a href="#exec-summary" class="nav-link block py-2"><i class="fa-solid fa-chart-line w-5"></i> Executive Summary</a></li>
+                <li><a href="#problems" class="nav-link block py-2"><i class="fa-solid fa-triangle-exclamation w-5"></i> 문제 정의 & 솔루션</a></li>
+                <li><a href="#scope" class="nav-link block py-2"><i class="fa-solid fa-list-check w-5"></i> P0/P1/P2 스코프</a></li>
+                <li><a href="#segments" class="nav-link block py-2"><i class="fa-solid fa-users-viewfinder w-5"></i> 고객 세그먼트</a></li>
+                <li><a href="#pricing" class="nav-link block py-2"><i class="fa-solid fa-tags w-5"></i> 수익모델 및 가격</a></li>
+                <li><a href="#financials" class="nav-link block py-2"><i class="fa-solid fa-coins w-5"></i> 재무전망 및 손익분기</a></li>
+                
+                <li class="uppercase text-xs text-gray-400 font-bold mb-2 mt-6">Part B. 상세 보고서</li>
+                <li><a href="#tech-arch" class="nav-link block py-2"><i class="fa-solid fa-network-wired w-5"></i> 기술 및 자동화 아키텍처</a></li>
+                <li><a href="#data-flow" class="nav-link block py-2"><i class="fa-solid fa-project-diagram w-5"></i> 데이터 흐름 (Mermaid)</a></li>
+                <li><a href="#wireframes" class="nav-link block py-2"><i class="fa-solid fa-mobile-screen-button w-5"></i> UI 와이어프레임</a></li>
+                <li><a href="#roadmap" class="nav-link block py-2"><i class="fa-solid fa-timeline w-5"></i> 12개월 실행 로드맵</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="md:ml-64 p-8 min-h-screen">
+        
+        <header class="bg-white rounded-2xl shadow-sm p-10 mb-10 border-t-4 border-primary">
+            [span_0](start_span)<h1 class="text-4xl font-extrabold text-gray-900 mb-4">스마트 약국 운영 OS[span_0](end_span)</h1>
+            [span_1](start_span)<p class="text-xl text-gray-600 mb-6">한국 약국 업무시간 절감형 AI·자동화 SaaS + 저비용 HW 통합 사업계획서[span_1](end_span)</p>
+            <div class="flex space-x-4 text-sm text-gray-500">
+                [span_2](start_span)<span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full font-semibold">버전: v1.1[span_2](end_span)</span>
+                [span_3](start_span)<span class="bg-gray-100 py-1 px-3 rounded-full"><i class="fa-regular fa-calendar mr-1"></i> 작성일: 2026-02-25[span_3](end_span)</span>
+            </div>
+        </header>
+
+        <section id="exec-summary" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">1. Executive Summary</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm card">
+                <p class="mb-4 text-gray-700 leading-relaxed">
+                    [span_4](start_span)본 통합 최종본은 '한국 약국의 조제·상담·기록·보고' 업무에서 발생하는 반복 입력과 포털 전환, 컴플라이언스 문서화 부담을 AI·자동화로 축소하여, 약국의 처리량(throughput)과 분쟁 대응력을 동시에 높이는 B2B SaaS + 저비용 하드웨어 번들(리스 중심) 사업계획이다.[span_4](end_span)
+                </p>
+                <p class="mb-6 text-gray-700 leading-relaxed">
+                    [span_5](start_span)핵심 방향은 기존 약국 청구/조제 프로그램을 '대체'하는 것이 아니라, 처방전 입력·대체조제 사후통보·복약지도 기록·환자 안내를 업무 흐름(Workflow) 단위로 <strong>'오버레이(overlay)'</strong>하여 시간을 절감하는 운영OS로 포지셔닝하는 것이다.[span_5](end_span)
+                </p>
+                
+                [span_6](start_span)<h3 class="text-xl font-bold mb-4 text-primary"><i class="fa-solid fa-star mr-2"></i>핵심 가치 (약국 KPI 기준)[span_6](end_span)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="p-4 border border-blue-100 bg-blue-50 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-2">입력/검증</h4>
+                        [span_7](start_span)<p class="text-sm text-gray-600">처방전 QR/2D 문자열 수신 + OCR fallback으로 '재입력' 최소화[span_7](end_span)</p>
+                    </div>
+                    <div class="p-4 border border-blue-100 bg-blue-50 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-2">보고/증빙</h4>
+                        [span_8](start_span)<p class="text-sm text-gray-600">대체조제 사후통보(심평원 포털 등) 업무 반자동 패키지로 누락 리스크 축소[span_8](end_span)</p>
+                    </div>
+                    <div class="p-4 border border-blue-100 bg-blue-50 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-2">상담/기록</h4>
+                        [span_9](start_span)<p class="text-sm text-gray-600">복약지도 내용을 템플릿+근거(RAG) 기반으로 자동 구성, 기록 저장을 SOP화[span_9](end_span)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="problems" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">2. 문제 정의 및 솔루션 개요</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm card border-l-4 border-red-500">
+                    [span_10](start_span)<h3 class="text-xl font-bold mb-4 text-red-600"><i class="fa-solid fa-circle-exclamation mr-2"></i>현장의 문제점[span_10](end_span)</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        [span_11](start_span)<li><i class="fa-solid fa-xmark text-red-400 mr-2"></i><strong>대체조제 발생 시:</strong> 내부 프로그램 → 엑셀 추출 → 포털 업로드/수기 입력 → 증빙 보관의 '다중 전환'[span_11](end_span)</li>
+                        [span_12](start_span)<li><i class="fa-solid fa-xmark text-red-400 mr-2"></i><strong>처방전 입력:</strong> QR/2D가 있더라도 재사용이 어려우면 추가 입력 비용 발생[span_12](end_span)</li>
+                        [span_13](start_span)<li><i class="fa-solid fa-xmark text-red-400 mr-2"></i><strong>분말/시럽 도징:</strong> 작업 자체 자동화 난도가 높고, 리스크 확대[span_13](end_span)</li>
+                        [span_14](start_span)<li><i class="fa-solid fa-xmark text-red-400 mr-2"></i><strong>복약지도 분쟁:</strong> 상담 수행 후 '기록/증빙' 부재 시 분쟁 비용 증가[span_14](end_span)</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm card border-l-4 border-green-500">
+                    [span_15](start_span)<h3 class="text-xl font-bold mb-4 text-green-600"><i class="fa-solid fa-lightbulb mr-2"></i>솔루션 (Workflow 중심)[span_15](end_span)</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        [span_16](start_span)<li><i class="fa-solid fa-check text-green-400 mr-2"></i><strong>① 처방 입력 레이어</strong>[span_16](end_span)</li>
+                        [span_17](start_span)<li><i class="fa-solid fa-check text-green-400 mr-2"></i><strong>② 대체조제/보고 레이어</strong>[span_17](end_span)</li>
+                        [span_18](start_span)<li><i class="fa-solid fa-check text-green-400 mr-2"></i><strong>③ 복약지도/기록 레이어</strong>[span_18](end_span)</li>
+                        [span_19](start_span)<li><i class="fa-solid fa-check text-green-400 mr-2"></i><strong>④ 환자 커뮤니케이션 레이어</strong>[span_19](end_span)</li>
+                    </ul>
+                    <p class="mt-4 text-sm text-gray-500 bg-gray-50 p-3 rounded">
+                        [span_20](start_span)초기 MVP는 유닛 이코노믹스를 잠그기 위해 P0 범위로 빠르게 유료 약국을 확보하는 전략 채택.[span_20](end_span)
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="scope" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">3. [span_21](start_span)P0/P1/P2 스코프[span_21](end_span)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-red-50 p-5 rounded-xl border border-red-100">
+                        [span_22](start_span)<h3 class="font-bold text-red-700 text-lg mb-3">P0 (반드시)[span_22](end_span)</h3>
+                        <ul class="text-sm space-y-2 text-gray-700 list-disc pl-4">
+                            [span_23](start_span)<li>처방 자동입력: QR/2D + OCR/NER[span_23](end_span)</li>
+                            [span_24](start_span)<li>상담기록: 템플릿 + RAG 자동 초안[span_24](end_span)</li>
+                            [span_25](start_span)<li>대체조제: 엑셀 생성 + 반자동 업로드[span_25](end_span)</li>
+                            [span_26](start_span)<li>환자 안내: 정보성 알림, 기본 중복 안내[span_26](end_span)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-yellow-50 p-5 rounded-xl border border-yellow-100">
+                        [span_27](start_span)<h3 class="font-bold text-yellow-700 text-lg mb-3">P1 (30~50약국 이후)[span_27](end_span)</h3>
+                        <ul class="text-sm space-y-2 text-gray-700 list-disc pl-4">
+                            [span_28](start_span)<li>세미 RPA 포털 입력 시간 추가 절감[span_28](end_span)</li>
+                            [span_29](start_span)<li>캡처 스테이션 리스 모델 론칭[span_29](end_span)</li>
+                            [span_30](start_span)<li>ASR: '녹취만' 우선 도입[span_30](end_span)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-50 p-5 rounded-xl border border-green-100">
+                        [span_31](start_span)<h3 class="font-bold text-green-700 text-lg mb-3">P2 (100약국 이후)[span_31](end_span)</h3>
+                        <ul class="text-sm space-y-2 text-gray-700 list-disc pl-4">
+                            [span_32](start_span)<li>ASR 전사+요약[span_32](end_span)</li>
+                            [span_33](start_span)<li>시럽 도저/저울 검수 PoC[span_33](end_span)</li>
+                            [span_34](start_span)<li>POS 정식 API 연동, 체인 콘솔/SSO[span_34](end_span)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="segments" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">4. [span_35](start_span)고객 세그먼트 및 시간절감 측정[span_35](end_span)</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 card">
+                <table class="min-w-full text-left text-sm whitespace-nowrap">
+                    <thead class="table-header uppercase tracking-wider">
+                        <tr>
+                            [span_36](start_span)<th scope="col" class="px-6 py-4">업무[span_36](end_span)</th>
+                            [span_37](start_span)<th scope="col" class="px-6 py-4">현재(분/건)[span_37](end_span)</th>
+                            [span_38](start_span)<th scope="col" class="px-6 py-4">솔루션 적용 후[span_38](end_span)</th>
+                            [span_39](start_span)<th scope="col" class="px-6 py-4">절감(초/건)[span_39](end_span)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50">
+                            [span_40](start_span)<td class="px-6 py-4 font-medium text-gray-900">처방 입력·검증(2D/QR 가능 시)[span_40](end_span)</td>
+                            [span_41](start_span)<td class="px-6 py-4">0.50[span_41](end_span)</td>
+                            [span_42](start_span)<td class="px-6 py-4 text-green-600 font-bold">0.33[span_42](end_span)</td>
+                            [span_43](start_span)<td class="px-6 py-4">10초[span_43](end_span)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-gray-50">
+                            [span_44](start_span)<td class="px-6 py-4 font-medium text-gray-900">처방 입력(OCR 기반)[span_44](end_span)</td>
+                            [span_45](start_span)<td class="px-6 py-4">2.00[span_45](end_span)</td>
+                            [span_46](start_span)<td class="px-6 py-4 text-green-600 font-bold">0.67[span_46](end_span)</td>
+                            [span_47](start_span)<td class="px-6 py-4">80초[span_47](end_span)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            [span_48](start_span)<td class="px-6 py-4 font-medium text-gray-900">상담기록/복약지도 생성[span_48](end_span)</td>
+                            [span_49](start_span)<td class="px-6 py-4">0.75[span_49](end_span)</td>
+                            [span_50](start_span)<td class="px-6 py-4 text-green-600 font-bold">0.25[span_50](end_span)</td>
+                            [span_51](start_span)<td class="px-6 py-4">30초[span_51](end_span)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-gray-50">
+                            [span_52](start_span)<td class="px-6 py-4 font-medium text-gray-900">대체조제 사후통보[span_52](end_span)</td>
+                            [span_53](start_span)<td class="px-6 py-4">2.00[span_53](end_span)</td>
+                            [span_54](start_span)<td class="px-6 py-4 text-green-600 font-bold">0.50[span_54](end_span)</td>
+                            [span_55](start_span)<td class="px-6 py-4">90초[span_55](end_span)</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            [span_56](start_span)<td class="px-6 py-4 font-medium text-gray-900">환자 알림·동의·수신관리[span_56](end_span)</td>
+                            [span_57](start_span)<td class="px-6 py-4">0.50[span_57](end_span)</td>
+                            [span_58](start_span)<td class="px-6 py-4 text-green-600 font-bold">0.25[span_58](end_span)</td>
+                            [span_59](start_span)<td class="px-6 py-4">15초[span_59](end_span)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="pricing" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">5. [span_60](start_span)수익모델 및 가격(최신 권고)[span_60](end_span)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm card mb-8">
+                [span_61](start_span)<h3 class="text-xl font-bold mb-4 text-primary">구독 티어[span_61](end_span)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                [span_62](start_span)<th class="border border-gray-200 px-4 py-2">티어[span_62](end_span)</th>
+                                [span_63](start_span)<th class="border border-gray-200 px-4 py-2">월 구독(원)[span_63](end_span)</th>
+                                [span_64](start_span)<th class="border border-gray-200 px-4 py-2">포함 기능[span_64](end_span)</th>
+                                [span_65](start_span)<th class="border border-gray-200 px-4 py-2">원가 통제 포인트[span_65](end_span)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                [span_66](start_span)<td class="border border-gray-200 px-4 py-2 font-bold text-gray-700">Basic[span_66](end_span)</td>
+                                [span_67](start_span)<td class="border border-gray-200 px-4 py-2 text-primary font-bold">149,000[span_67](end_span)</td>
+                                [span_68](start_span)<td class="border border-gray-200 px-4 py-2">QR/2D + OCR/NER 입력, 기본 기록, 기본 DUR[span_68](end_span)</td>
+                                [span_69](start_span)<td class="border border-gray-200 px-4 py-2">LLM 최소(템플릿 중심)[span_69](end_span)</td>
+                            </tr>
+                            <tr class="bg-blue-50">
+                                [span_70](start_span)<td class="border border-gray-200 px-4 py-2 font-bold text-gray-700">Pro[span_70](end_span)</td>
+                                [span_71](start_span)<td class="border border-gray-200 px-4 py-2 text-primary font-bold">299,000[span_71](end_span)</td>
+                                [span_72](start_span)<td class="border border-gray-200 px-4 py-2">Basic + LLM+RAG 초안, 정보성 알림톡, 기본 CRM[span_72](end_span)</td>
+                                [span_73](start_span)<td class="border border-gray-200 px-4 py-2">토큰예산+캐시+근거없으면 차단[span_73](end_span)</td>
+                            </tr>
+                            <tr>
+                                [span_74](start_span)<td class="border border-gray-200 px-4 py-2 font-bold text-gray-700">Automation[span_74](end_span)</td>
+                                [span_75](start_span)<td class="border border-gray-200 px-4 py-2 text-primary font-bold">449,000[span_75](end_span)</td>
+                                [span_76](start_span)<td class="border border-gray-200 px-4 py-2">Pro + 대체조제 반자동 + 작업지시/라벨 + 리포트[span_76](end_span)</td>
+                                [span_77](start_span)<td class="border border-gray-200 px-4 py-2">RPA 풀자동 금지, 예외처리 필수[span_77](end_span)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm card">
+                [span_78](start_span)<h3 class="text-xl font-bold mb-4 text-primary">HW 라인업 단가 및 단위경제[span_78](end_span)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                [span_79](start_span)<th class="border border-gray-200 px-4 py-2">장치/모듈[span_79](end_span)</th>
+                                [span_80](start_span)<th class="border border-gray-200 px-4 py-2">보급형(리스)[span_80](end_span)</th>
+                                [span_81](start_span)<th class="border border-gray-200 px-4 py-2">예상 제조원가(BOM)[span_81](end_span)</th>
+                                [span_82](start_span)<th class="border border-gray-200 px-4 py-2">비고[span_82](end_span)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                [span_83](start_span)<td class="border border-gray-200 px-4 py-2 font-bold">캡처 스테이션[span_83](end_span)</td>
+                                [span_84](start_span)<td class="border border-gray-200 px-4 py-2">99k월[span_84](end_span)</td>
+                                [span_85](start_span)<td class="border border-gray-200 px-4 py-2">0.6~1.0M[span_85](end_span)</td>
+                                [span_86](start_span)<td class="border border-gray-200 px-4 py-2 text-xs">스캐너+카메라+프린터 조달[span_86](end_span)</td>
+                            </tr>
+                            <tr>
+                                [span_87](start_span)<td class="border border-gray-200 px-4 py-2 font-bold">시럽 정량 디스펜서[span_87](end_span)</td>
+                                [span_88](start_span)<td class="border border-gray-200 px-4 py-2">249k월[span_88](end_span)</td>
+                                [span_89](start_span)<td class="border border-gray-200 px-4 py-2">1.2~2.0M[span_89](end_span)</td>
+                                [span_90](start_span)<td class="border border-gray-200 px-4 py-2 text-xs">펌프+로드셀, 세척모드 필수[span_90](end_span)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="financials" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">7. [span_91](start_span)3년 재무전망 및 손익분기[span_91](end_span)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm card">
+                <p class="text-gray-600 mb-4 text-sm">기존안에서 적자가 크게 발생한 원인은 '고정비 선반영'과 'LLM/ASR 변동비 통제 부재'였습니다. [span_92](start_span)본 최종안은 P0 스코프 컷, 상한제로 Year2 흑자전환을 목표로 합니다.[span_92](end_span)</p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm border-collapse border border-gray-200 text-center">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                [span_93](start_span)<th class="px-4 py-2">시나리오[span_93](end_span)</th>
+                                [span_94](start_span)<th class="px-4 py-2">연도[span_94](end_span)</th>
+                                [span_95](start_span)<th class="px-4 py-2">매출(M)[span_95](end_span)</th>
+                                [span_96](start_span)<th class="px-4 py-2">총이익(M)[span_96](end_span)</th>
+                                [span_97](start_span)<th class="px-4 py-2">OPEX(M)[span_97](end_span)</th>
+                                [span_98](start_span)<th class="px-4 py-2">EBITDA(M)[span_98](end_span)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-green-50">
+                                [span_99](start_span)<td rowspan="3" class="border px-4 py-2 font-bold">Best[span_99](end_span)</td>
+                                [span_100](start_span)<td class="border px-4 py-2">1[span_100](end_span)[span_101](start_span)</td><td class="border px-4 py-2">420[span_101](end_span)[span_102](start_span)</td><td class="border px-4 py-2">340[span_102](end_span)[span_103](start_span)</td><td class="border px-4 py-2">260[span_103](end_span)[span_104](start_span)</td><td class="border px-4 py-2 text-green-600 font-bold">80[span_104](end_span)</td>
+                            </tr>
+                            [span_105](start_span)<tr class="bg-green-50"><td class="border px-4 py-2">2[span_105](end_span)[span_106](start_span)</td><td class="border px-4 py-2">1,500[span_106](end_span)[span_107](start_span)</td><td class="border px-4 py-2">1,230[span_107](end_span)[span_108](start_span)</td><td class="border px-4 py-2">520[span_108](end_span)[span_109](start_span)</td><td class="border px-4 py-2 text-green-600 font-bold">710[span_109](end_span)</td></tr>
+                            [span_110](start_span)<tr class="bg-green-50"><td class="border px-4 py-2">3[span_110](end_span)[span_111](start_span)</td><td class="border px-4 py-2">4,500[span_111](end_span)[span_112](start_span)</td><td class="border px-4 py-2">3,690[span_112](end_span)[span_113](start_span)</td><td class="border px-4 py-2">820[span_113](end_span)[span_114](start_span)</td><td class="border px-4 py-2 text-green-600 font-bold">2,870[span_114](end_span)</td></tr>
+                            
+                            <tr>
+                                [span_115](start_span)<td rowspan="3" class="border px-4 py-2 font-bold">Likely[span_115](end_span)</td>
+                                [span_116](start_span)<td class="border px-4 py-2">1[span_116](end_span)[span_117](start_span)</td><td class="border px-4 py-2">240[span_117](end_span)[span_118](start_span)</td><td class="border px-4 py-2">190[span_118](end_span)[span_119](start_span)</td><td class="border px-4 py-2">260[span_119](end_span)[span_120](start_span)</td><td class="border px-4 py-2 text-red-500 font-bold">-70[span_120](end_span)</td>
+                            </tr>
+                            [span_121](start_span)<tr><td class="border px-4 py-2">2[span_121](end_span)[span_122](start_span)</td><td class="border px-4 py-2">950[span_122](end_span)[span_123](start_span)</td><td class="border px-4 py-2">760[span_123](end_span)[span_124](start_span)</td><td class="border px-4 py-2">520[span_124](end_span)[span_125](start_span)</td><td class="border px-4 py-2 text-green-600 font-bold">240[span_125](end_span)</td></tr>
+                            [span_126](start_span)<tr><td class="border px-4 py-2">3[span_126](end_span)[span_127](start_span)</td><td class="border px-4 py-2">2,900[span_127](end_span)[span_128](start_span)</td><td class="border px-4 py-2">2,320[span_128](end_span)[span_129](start_span)</td><td class="border px-4 py-2">820[span_129](end_span)[span_130](start_span)</td><td class="border px-4 py-2 text-green-600 font-bold">1,500[span_130](end_span)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="data-flow" class="mb-12">
+            [span_131](start_span)<h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">데이터 흐름도 (Mermaid)[span_131](end_span)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm card overflow-x-auto text-center">
+                <div class="mermaid">
+flowchart LR
+    A[처방 캡처\n(2D/QR 스캔 or 이미지/OCR)] --> B[파싱/정규화\n(OCR 후처리 + NER + 룰)]
+    B --> C[DUR 룰 체크\n(병용금기/연령금기 등)]
+    B --> D[대체조제 매핑\n(동일성분/재고/사유 입력)]
+    D --> E[사후통보 자동화\n(RPA/포털 입력 보조)]
+    B --> F[상담요약/복약지도\n(LLM+RAG+근거)]
+    F --> G[약사 승인/기록 저장\n(감사로그)]
+    G --> H[환자 안내 발송\n(알림톡/동의/수신관리)]
+    G --> I[작업지시 생성\n(포장/분말/시럽)]
+    I --> J[자동충전/검수 지시\n(하드웨어 API)]
+                </div>
+                [span_132](start_span)<p class="text-xs text-gray-500 mt-4">대체조제 사후통보는 2026-02-02부터 심사평가원 정보시스템을 이용한 통보가 규정상 포함되고, 지원 시스템이 운영됩니다.[span_132](end_span)</p>
+            </div>
+        </section>
+
+        <section id="roadmap" class="mb-12">
+            [span_133](start_span)<h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">12개월 로드맵 (Mermaid)[span_133](end_span)</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm card overflow-x-auto text-center">
+                <div class="mermaid">
+gantt
+    title 12개월 로드맵(Discovery→Pilot→Launch)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m
+    
+    section Discovery
+    현장인터뷰/워크샘플 수집           :a1, 2026-03-01, 30d
+    파일럿 약국 선정·계약(DPA 포함)     :a2, 2026-03-10, 40d
+    
+    section Data & Compliance
+    개인정보/보안 설계(기본정책)        :b1, 2026-03-15, 60d
+    카카오 템플릿/운영정책 설계          :b2, 2026-04-01, 45d
+    법무 검토(약사법 등)               :b3, 2026-04-01, 60d
+    
+    section Core MVP Build
+    캡처(OCR/2D) + 파싱 엔진           :c1, 2026-04-01, 75d
+    상담요약(LLM+RAG) + 근거패널         :c2, 2026-05-01, 75d
+    기록/감사로그 + CRM 기초             :c3, 2026-05-15, 60d
+    
+    section HW Prototype
+    캡처 스테이션 PoC                    :d1, 2026-05-15, 60d
+    시럽 도저/분쇄 로거 개념검증          :d2, 2026-06-15, 60d
+    
+    section Pilot & Launch
+    파일럿 설치/교육                      :e1, 2026-07-01, 30d
+    운영 데이터 수집(시간절감 측정)       :e2, 2026-08-01, 60d
+    유료 전환/레퍼런스 확보               :f2, 2026-11-15, 45d
+    v1.0 런칭                            :f3, 2026-12-20, 20d
+                </div>
+            </div>
+        </section>
+
+        <section id="wireframes" class="mb-12">
+            [span_134](start_span)<h2 class="text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-2">UI 와이어프레임 (ASCII)[span_134](end_span)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    [span_135](start_span)<h3 class="font-bold text-gray-700 mb-2">약사용 화면(웹/태블릿) - 홈/대기열[span_135](end_span)</h3>
+                    <pre class="wireframe text-xs">
+┌──────────────────────────────────────────────┐
+│ 오늘 처방: 187건  대기: 6  대체조제: 4건       │
+│ [처방 캡처] [QR/2D 입력대기] [수기 입력]        │
+│------------------------------------------------│
+│ 대기열                                          │
+│  - 김**(67)  고혈압/당뇨  [열기]                │
+│  - 이**(4)   소아/시럽   [열기]                │
+└──────────────────────────────────────────────┘
+                    </pre>
+                </div>
+                <div>
+                    [span_136](start_span)<h3 class="font-bold text-gray-700 mb-2">처방 캡처/파싱[span_136](end_span)</h3>
+                    <pre class="wireframe text-xs">
+┌──────────────────────────────────────────────┐
+│ 입력 방식:  ( )2D/QR  ( )이미지/OCR  ( )PDF     │
+│ [스캔/촬영]  [붙여넣기(스캐너 문자열)]           │
+│------------------------------------------------│
+│ 파싱 결과(수정 가능)                             │
+│ 환자: 김** 연락처: 010-****-1234 (미동의)       │
+│ 약품:                                               │
+│  1) Amlodipine 5mg  1T 1회/일  30일               │
+│ [DUR 체크]  [대체조제 필요?]  [작업지시 생성]      │
+└──────────────────────────────────────────────┘
+                    </pre>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="mt-16 pt-8 border-t border-gray-200 text-center text-sm text-gray-500">
+            <p>문서 버전: v1.1 | [span_137](start_span)작성일: 2026-02-25[span_137](end_span)</p>
+            <p class="mt-2">해당 내용은 제공된 문서 데이터 포맷을 기반으로 생성된 대시보드 구조입니다.</p>
+        </footer>
+    </main>
+
+</body>
+</html>
