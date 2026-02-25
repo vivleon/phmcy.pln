@@ -1,604 +1,689 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VivRx OS - Smart Pharmacy Operating System</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Mermaid.js -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+import React, { useState, useEffect } from 'react';
+import { 
+  Menu, X, ChevronRight, Activity, Cpu, ShieldCheck, 
+  DollarSign, FileText, LayoutDashboard, Box, Settings, 
+  Layers, Database, BarChart3, Presentation, AlertTriangle, CheckCircle2 
+} from 'lucide-react';
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['"Pretendard"', 'sans-serif'] },
-                    colors: { 
-                        primary: '#4F46E5', secondary: '#4338CA', 
-                        accent: '#10B981', background: '#F8FAFC',
-                        kakao: '#FEE500', kakaoText: '#191919'
-                    }
-                }
-            }
-        }
-        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#EEF2FF', primaryTextColor: '#3730A3', primaryBorderColor: '#4F46E5', lineColor: '#4F46E5' } });
-    </script>
-    
-    <style>
-        body { background-color: #F8FAFC; color: #334155; }
-        
-        /* Tab transition logic to maintain dimensions for charts/mermaid */
-        .tab-content { position: absolute; visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out; }
-        .tab-content.active { position: relative; visibility: visible; opacity: 1; height: auto; overflow: visible; }
-        
-        .card { transition: all 0.3s ease; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08); }
-        .table-head { background-color: #EEF2FF; color: #3730A3; font-weight: 600; }
-        
-        /* Mockup Styles */
-        .mockup-window { background: #F1F5F9; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
-        .mobile-mockup { width: 320px; height: 620px; background: #fff; border-radius: 35px; border: 12px solid #1E293B; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); margin: 0 auto; }
-        .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1E293B; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 20; }
-        
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        
-        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        
-        /* Loading Spinner */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #4F46E5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body class="antialiased font-sans">
+// --- 데이터 모델 ---
+const TABS = [
+  { id: 'summary', label: '요약 및 개요', icon: <LayoutDashboard size={18} /> },
+  { id: 'architecture', label: '아키텍처 및 HW', icon: <Box size={18} /> },
+  { id: 'software', label: '소프트웨어 및 AI', icon: <Cpu size={18} /> },
+  { id: 'qa', label: '품질(QA) 및 세정', icon: <ShieldCheck size={18} /> },
+  { id: 'business', label: '사업성 및 재무', icon: <DollarSign size={18} /> },
+  { id: 'ir', label: '예창패/IR 패키지', icon: <Presentation size={18} /> },
+];
 
-    <!-- Top Navigation -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center space-x-2 text-primary">
-                        <i class="fa-solid fa-leaf text-2xl"></i>
-                        <span class="font-extrabold text-2xl tracking-tight">VivRx OS</span>
-                    </div>
-                    <div class="hidden md:ml-10 md:flex md:space-x-8" id="tab-nav">
-                        <button onclick="switchTab('tab1')" class="tab-btn active border-primary text-primary border-b-2 px-1 pt-1 text-sm font-bold transition-colors">비전 & 사업전략</button>
-                        <button onclick="switchTab('tab2')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">재무 & 수익모델</button>
-                        <button onclick="switchTab('tab3')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">기술 & 시스템 설계</button>
-                        <button onclick="switchTab('tab4')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">UX/UI 인터랙션</button>
-                    </div>
-                </div>
-                <div class="flex items-center text-sm font-medium text-gray-500">
-                    Team <strong class="text-primary ml-1">VivLeoN</strong> 
-                    <span class="mx-2">|</span> v1.1
-                </div>
+const ARCH_TABLE = [
+  { name: '배치 혼합+분할(디스크형)', speed: '매우 높음(50ppm급)', recipe: '20–150', fit: '올인원은 CAPEX↑', clean: '공유 경로 잔류 관리가 핵심', useCase: '장기처방·대량·중간 다양성' },
+  { name: '퍼‑포치 다중 피더', speed: '중~상(성분 수↑ 시 감소)', recipe: '100–1,000+', fit: '모듈형이면 엔트리 가능', clean: '채널 분리로 교차오염↓', useCase: '“레시피 무제한” 최우선' },
+  { name: '하이브리드(베이스+토핑)', speed: '실효 처리량 최적', recipe: '100–500', fit: '엔트리~미드 적합', clean: '베이스 경로 세정 + 토핑 경로 분리', useCase: '약국/센터필 모두' },
+  { name: 'LIW 카트리지 기반 도징', speed: '중~상', recipe: '100–1,000', fit: '엔트리 도크 핵심', clean: '진동/온도/압력·기류 영향 민감', useCase: '저가+성능 동시 추구' },
+  { name: '멀티레인 VFFS 코어', speed: '매우 높음(1,000/min 상한)', recipe: '200–2,000', fit: '엔터프라이즈 SKU', clean: '고속·QC·분진 대응 유리', useCase: '센터필/대형 체인' },
+  { name: '로터리 터렛 인덱싱', speed: '높음(컴팩트 병렬)', recipe: '200–1,000', fit: '2세대에 적합', clean: '포켓 세정/건조가 난제', useCase: '초컴팩트 고속 확장' },
+  { name: '멀티헤드 조합계량 차용', speed: '빠른 계량 사이클', recipe: '50–300', fit: '베이스/부형제 가속', clean: '자유유동성 전제 강함', useCase: '특정 공정 가속 모듈' }
+];
+
+const BOM_TABLE = [
+  { module: '도징 도크(4~6ch)', func: '포단위 다약 정량 투입', bom: '로드셀/ADC, 스크루·모터, 차폐, 진동절연', cost: '900 / 2,800 / 6,500', strategy: '로드셀·모터 COTS, 프레임 국내 판금' },
+  { module: '버퍼 호퍼', func: '포장 코어 피딩 안정화', bom: '호퍼, 레벨센서, 안티브리징', cost: '150 / 800 / 2,000', strategy: 'COTS 호퍼+센서' },
+  { module: '포장 코어(파트너)', func: '성형/실링/절단/인쇄', bom: '히터, 장력, 커터, 프린터', cost: '1,600 / 5,000 / 12,000', strategy: '엔트리는 COTS/OEM 우선' },
+  { module: '집진/HEPA', func: '분진·노출·오염 관리', bom: '음압팬, HEPA, 필터백', cost: '300 / 2,000 / 10,000', strategy: 'COTS 모듈화, 필터 소모품화' },
+  { module: '수세·건조 모듈', func: '물 세척 + 무소모품 건조', bom: '노즐, 배수, 에어블로우, 센서', cost: '250 / 1,500 / 4,500', strategy: '비가동 유지보수용 (가동중 세척 금지)' },
+  { module: '체크웨이어(옵션)', func: '100% 질량 검증', bom: '벨트, 로드셀, 리젝트', cost: '2,000 / 10,000 / 30,000', strategy: 'OIML R51 정합 시험 계획 권장' },
+  { module: '비전(잔류/건조)', func: '잔류/물방울·습윤 확인', bom: '카메라·조명·SW', cost: '150 / 900 / 5,000', strategy: 'AI 소프트웨어 차별화' },
+  { module: '카트리지 바디', func: '약물 인터페이스', bom: '하우징, 씰, RFID', cost: '15 / 40 / 90', strategy: '초기 CNC/3DP → 1k+ 금형 전환' },
+  { module: '라이너(소모품)', func: '교차오염 경감', bom: '라이너 필름, 캡, 라벨, 건조제', cost: '0.4 / 1.3 / 3.2', strategy: '컨버팅 외주, LOT 추적' }
+];
+
+const PNL_TABLE = [
+  { year: '1년차', sales: '10대', total: '10대', rev: '3.4억', gp: '1.4억', opex: '8억', op: '-6.6억' },
+  { year: '2년차', sales: '35대', total: '45대', rev: '13.3억', gp: '6.0억', opex: '12억', op: '-6.0억' },
+  { year: '3년차', sales: '80대', total: '125대', rev: '34.8억', gp: '17.2억', opex: '18억', op: '-0.8억' },
+  { year: '4년차', sales: '160대', total: '285대', rev: '78.6억', gp: '40.6억', opex: '24억', op: '16.6억' },
+  { year: '5년차', sales: '300대', total: '585대', rev: '159.0억', gp: '86.7억', opex: '30억', op: '56.7억' },
+];
+
+const DRAWING_LIST = [
+  { id: 'GA‑E‑0001', name: '엔트리 SKU 전체 배치도', out: 'GA 3면도', req: 'Envelope, 유지보수 공간, 배수 라인' },
+  { id: 'ASM‑DD‑0100', name: '도징 도크 조립도', out: 'Exploded + BOM', req: '슬롯 수, 로드셀 위치, 방진 마운트' },
+  { id: 'PRT‑DD‑0120', name: '도징 도크 프레임', out: '판금도', req: '분진 씰링, 접지 포인트' },
+  { id: 'ASM‑CAR‑0200', name: '카트리지 바디', out: '조립도', req: '커플링 규격, RFID 위치' },
+  { id: 'PRT‑LIN‑0210', name: '라이너/캡', out: '단품도', req: '필름 재질, 실링 방식' },
+  { id: 'ASM‑WASH‑0300', name: '수세·건조 모듈', out: '조립도', req: '노즐 위치, 드레인, 건조 덕트' },
+  { id: 'ICD‑ME‑0400', name: '기구 인터페이스', out: 'ICD', req: '도크‑포장 연결부, 체결홀 패턴' },
+  { id: 'ICD‑EL‑0410', name: '전기 인터페이스', out: 'ICD', req: '110–240V, 접지, E‑Stop' },
+  { id: 'ICD‑SW‑0420', name: 'SW 프로토콜', out: 'ICD', req: '작업지시, 로그, 오류코드' },
+];
+
+const FLOWABILITY = [
+  { index: '≦10%', level: 'Excellent', hr: '1.00–1.11', action: '기본 자동 도징 지원' },
+  { index: '11–15%', level: 'Good', hr: '1.12–1.18', action: '기본 자동 도징 지원' },
+  { index: '16–20%', level: 'Fair', hr: '1.19–1.25', action: '기본 자동 도징 지원' },
+  { index: '21–25%', level: 'Passable', hr: '1.26–1.34', action: '기본 자동 도징 지원' },
+  { index: '26–31%', level: 'Poor', hr: '1.35–1.45', action: '보조장치 또는 전용 카트리지 조건부 지원' },
+  { index: '32–37%', level: 'Very poor', hr: '1.46–1.59', action: '보조장치 또는 전용 카트리지 조건부 지원' },
+  { index: '38% 이상', level: 'Very, very poor', hr: '>1.60', action: '반자동/제한 워크플로 보완' },
+];
+
+const IR_DECK = [
+  { title: '1. Title', desc: '산제 자동 도징·포장 플랫폼: Recipe OS + 카트리지/라이너 기반 반복매출' },
+  { title: '2. Problem', desc: '약국 산제 업무 병목(인력·오류·세정·분진) 및 레시피 다양성 운영 리스크 KPI 제시' },
+  { title: '3. Why Now', desc: '고령화/장기처방 증가, 인력난, 복약순응 포장 수요 증가' },
+  { title: '4. Solution', desc: '도징 도크 + 포장 코어 연동 + 수세/건조 + 레시피 OS 플랫폼화' },
+  { title: '5. Reference', desc: '상용 로봇 50ppm, 최소 0.5g ±5%, 자동세정 컨셉 존재를 "기술 하한"으로 제시' },
+  { title: '6. Architecture', desc: '모듈형 Scale-out과 3 SKU 로드맵(엔트리/스피드/정확도)' },
+  { title: '7. AI Moat', desc: '스케줄링·도징 튜닝·이상감지·잔류비전. LIW 진동/기류 격리 한계를 데이터 튜닝으로 극복' },
+  { title: '8. Quality & Safety', desc: '수세가능 + 무소모품 건조 + 건조센서 게이트 + 2단 계량 + OOT 리젝트 (FDA 가이드 정합)' },
+  { title: '9. Business Model', desc: 'HW + 구독 + 소모품. 포장재 지정/코어 임대 등 상용 락인 선례 활용' },
+  { title: '10. Go-to-market', desc: '레트로핏(기존 포장기 고객) → 올인원(번들) → 센터필(멀티레인)' },
+  { title: '11. Unit Economics', desc: '엔트리 ASP 3천만원, 소모품/구독 ARPU, 5년 P&L 요약' },
+  { title: '12. Ask', desc: '예창패/실증 파트너/전략투자 요청 (금액 및 마일스톤)' }
+];
+
+const BP_PAGES = [
+  { p: 'p1~p3', title: '개요 및 문제정의', desc: '플랫폼 소개, 약국 업무 병목(인력/오류/세정) 및 레시피 복잡성 한계 지적' },
+  { p: 'p4~p7', title: '고객, 경쟁, 해결책', desc: '고객 세그먼트, 고가 로봇 vs 저가 포장기 비교, 도크+OS 플랫폼 차별점(라이너, AI, 세정)' },
+  { p: 'p8~p11', title: '기술 및 품질전략', desc: 'Scale-out 구조, 2단 계량(Auto Onedy-zero 참조), FDA 기반 세정, LIW 튜닝 AI' },
+  { p: 'p12~p14', title: 'BM 및 가격전략', desc: '구독+소모품 장기 수익 모델, 엔트리 3천만원 및 옵션 업셀 전략' },
+  { p: 'p15~p18', title: '실행 및 규제대응', desc: 'MVP 개발, 약국 PoC(처리량/업타임), 자체 IP 및 외주 분리, FDA/EMA 위험평가 적용' },
+  { p: 'p19~p24', title: '기술/사업 상세', desc: '도면/ICD, 데이터 보안, AS목표, IP 전략, 경쟁 리스크, 확장 로드맵' },
+  { p: 'p25~p30', title: '재무 및 요청사항', desc: '5년 P&L, 자문팀 구성, 예산배분(0.8억 가정), 24개월 일정, 리스크 관리, 최종 요청' }
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('summary');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [animate, setAnimate] = useState(false);
+
+  // 탭 전환 시 페이드 인 효과
+  useEffect(() => {
+    setAnimate(true);
+    const timer = setTimeout(() => setAnimate(false), 500);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
+  const handleTabChange = (id) => {
+    setActiveTab(id);
+    setIsMobileMenuOpen(false);
+  };
+
+  // 공통 UI 컴포넌트
+  const Card = ({ children, className = "" }) => (
+    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ${className}`}>
+      {children}
+    </div>
+  );
+
+  const SectionTitle = ({ title, icon }) => (
+    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">{icon}</div>
+      <h3 className="text-xl font-bold text-slate-800">{title}</h3>
+    </div>
+  );
+
+  // --- 탭별 컨텐츠 컴포넌트 ---
+  
+  const TabSummary = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-10 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4 leading-tight">모듈형 산제 자동 도징·포장 플랫폼</h2>
+        <p className="text-blue-100 text-lg max-w-3xl leading-relaxed">
+          엔트리 SKU 목표가 약 3,000만원을 전제로, 품질·세정·검증을 최우선 요구사항으로 상정한 
+          Scale-out 플랫폼 설계 사양과 사업화(예창패/IR) 패키지입니다.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { title: "타겟 가격 (Entry)", value: "3,000만원", desc: "미화 약 $20-30k", icon: <DollarSign /> },
+          { title: "목표 처리량", value: "20-60 ppm", desc: "유효 가동률 30-70%", icon: <Activity /> },
+          { title: "정확도 (Tier A)", value: "±5%", desc: "최소 0.5g/약품 기준", icon: <ShieldCheck /> },
+          { title: "설치 공간 (Compact)", value: "폭 0.9m 이하", desc: "고처리 하이는 1.2-1.3m", icon: <Box /> }
+        ].map((item, i) => (
+          <Card key={i} className="p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500 font-medium mb-1">{item.title}</p>
+                <h4 className="text-2xl font-bold text-slate-800">{item.value}</h4>
+                <p className="text-xs text-slate-400 mt-2">{item.desc}</p>
+              </div>
+              <div className="text-blue-500 bg-blue-50 p-2 rounded-lg">{item.icon}</div>
             </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6">
+        <SectionTitle title="Executive Summary (핵심 결론)" icon={<FileText size={20} />} />
+        <ul className="space-y-4 text-slate-700">
+          <li className="flex gap-3">
+            <CheckCircle2 className="text-blue-500 shrink-0 mt-0.5" size={20} />
+            <p><strong>올인원 한계 극복:</strong> 초소형 포장 코어(42ppm급)를 레버리지하고, 당사는 "도징 도크+레시피OS+카트리지/라이너+세정"에 집중하는 플랫폼 전략.</p>
+          </li>
+          <li className="flex gap-3">
+            <CheckCircle2 className="text-blue-500 shrink-0 mt-0.5" size={20} />
+            <p><strong>현실적 성능 하한:</strong> 상용 레퍼런스 기준 50 packs/min, 93~186포/런, 최소 0.5g ±5% 조건을 성능 기준점으로 제시.</p>
+          </li>
+          <li className="flex gap-3">
+            <CheckCircle2 className="text-blue-500 shrink-0 mt-0.5" size={20} />
+            <p><strong>경제적 세정 3층 구조:</strong> (1) 경로 분리/퀵체인지, (2) 오퍼레이터 트리거 수세, (3) 무소모품 에어블로우 및 건조 센서 확인. (FDA SOP 정합)</p>
+          </li>
+          <li className="flex gap-3">
+            <CheckCircle2 className="text-blue-500 shrink-0 mt-0.5" size={20} />
+            <p><strong>고효율 AI 포지셔닝:</strong> 온디바이스 대형 모델이 아닌 스케줄링 최적화, LIW 파라미터 튜닝, 이상감지, 비전 잔류 확인에 집중하여 ROI 극대화.</p>
+          </li>
+        </ul>
+      </Card>
+    </div>
+  );
+
+  const TabArchitecture = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <Card className="p-6">
+        <SectionTitle title="시스템 구성 및 확장 방식 (Scale-out)" icon={<Layers size={20} />} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">1</div>
+            <h4 className="font-bold text-slate-800 mb-2">엔트리 구축</h4>
+            <p className="text-sm text-slate-600">Dock 1대 + 포장 레인 1개<br/>(20-40 ppm 목표)</p>
+          </div>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center relative">
+            <div className="hidden md:block absolute top-1/2 -left-3 w-6 h-0.5 bg-slate-300"></div>
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">2</div>
+            <h4 className="font-bold text-slate-800 mb-2">레시피 분리형</h4>
+            <p className="text-sm text-slate-600">Dock 2대(병렬) + 레인 1개<br/>(세정부담↓, 가동률↑)</p>
+          </div>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center relative">
+            <div className="hidden md:block absolute top-1/2 -left-3 w-6 h-0.5 bg-slate-300"></div>
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">3</div>
+            <h4 className="font-bold text-slate-800 mb-2">센터필급 확장</h4>
+            <p className="text-sm text-slate-600">Dock 1~2대 + 멀티레인 VFFS<br/>(엔터프라이즈 속도)</p>
+          </div>
         </div>
-    </nav>
 
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Header Section (Always visible) -->
-        <header class="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-2xl shadow-lg p-8 mb-8 text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl"></div>
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-3 relative z-10">한국 약국 업무시간 절감형 AI·자동화 SaaS + 저비용 HW</h1>
-            <p class="text-indigo-100 text-lg md:text-xl max-w-3xl relative z-10">반복 입력, 포털 전환, 컴플라이언스 문서화 부담을 축소하여 약국의 처리량(Throughput)과 분쟁 대응력을 동시에 높이는 통합 솔루션 사업계획</p>
-        </header>
-
-        <!-- ==========================================
-             TAB 1: 비전 & 사업전략 (Overview & Strategy)
-             ========================================== -->
-        <div id="tab1" class="tab-content active space-y-10">
-            
-            <!-- Executive Summary & Problem -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center border-b pb-2"><i class="fa-solid fa-lightbulb text-accent mr-2"></i>Executive Summary</h2>
-                    <p class="text-gray-600 leading-relaxed mb-4">
-                        기존 약국 청구/조제 프로그램을 '대체'하는 것이 아닌, <strong>처방전 입력·대체조제 사후통보·복약지도 기록·환자 안내를 업무 흐름(Workflow) 단위로 '오버레이(overlay)'</strong>하여 시간을 절감하는 운영OS 입니다.
-                    </p>
-                    <ul class="space-y-3 text-sm text-gray-700">
-                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>입력/검증:</strong> QR/2D 문자열 수신 + OCR fallback으로 재입력 최소화</li>
-                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>보고/증빙:</strong> 대체조제 사후통보 반자동 패키지로 누락 리스크 축소</li>
-                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>상담/기록:</strong> RAG 기반 복약지도 템플릿 + 조제기록부 저장 SOP화</li>
-                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>분쟁 대비:</strong> 상담 음성 녹취 및 전사(옵트인)로 법적 분쟁 방어력 상승</li>
-                    </ul>
-                </section>
-                
-                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card border-t-4 border-t-red-500">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center border-b pb-2"><i class="fa-solid fa-triangle-exclamation text-red-500 mr-2"></i>현장의 문제점 정의</h2>
-                    <ul class="space-y-4 text-gray-700">
-                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">대체조제 비효율:</strong> 내부 프로그램 → 엑셀 추출 → 심평원 포털 업로드 → 증빙 보관의 다중 전환 발생.</li>
-                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">입력 비용 발생:</strong> QR/2D가 있더라도 재사용이 어려우면 추가 수기 입력 비용 발생.</li>
-                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">복약지도 분쟁:</strong> 상담을 수행했음에도 명확한 '기록/증빙' 부재 시 환자 클레임 및 분쟁 비용 증가.</li>
-                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">조제 리스크:</strong> 분말/시럽 조제 시 기록·검수 체계 부재로 인한 오투약 리스크 존재.</li>
-                    </ul>
-                </section>
+        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Box size={18}/> CAD General Arrangement (정면도 시각화)</h4>
+        <div className="bg-slate-800 rounded-xl p-6 text-white text-center font-mono relative overflow-hidden shadow-inner">
+          <div className="max-w-2xl mx-auto border-2 border-slate-600 rounded-lg p-1 flex flex-col gap-1">
+            <div className="bg-blue-900/50 border border-blue-500/50 rounded py-4 text-sm relative">
+              <span className="font-bold block">포장 코어 (외부 파트너)</span>
+              <span className="text-xs text-blue-200">필름 / 실링 / 절단 / 프린트</span>
+              <span className="absolute right-2 top-2 text-xs text-slate-400">H≈900~1100</span>
             </div>
-
-            <!-- Scope (P0/P1/P2) -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">기능 스코프 (P0/P1/P2)</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="border border-indigo-200 bg-indigo-50 p-5 rounded-xl card">
-                        <div class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P0 (반드시/MVP)</div>
-                        <ul class="text-sm space-y-2 text-gray-700">
-                            <li>• 처방 자동입력 (QR/2D + OCR/NER)</li>
-                            <li>• 상담기록/복약지도 (템플릿+RAG 초안)</li>
-                            <li>• 대체조제 엑셀 생성+반자동 업로드</li>
-                            <li>• 환자 안내 (알림톡, 동의 관리)</li>
-                            <li>• 기본 감사로그/권한/보관정책</li>
-                        </ul>
-                    </div>
-                    <div class="border border-emerald-200 bg-emerald-50 p-5 rounded-xl card">
-                        <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P1 (유료 30~50곳)</div>
-                        <ul class="text-sm space-y-2 text-gray-700">
-                            <li>• 세미 RPA (포털 입력 시간 추가 절감)</li>
-                            <li>• 캡처 스테이션 리스 모델 론칭</li>
-                            <li>• ASR 도입 ('녹취만' 우선, 전사는 옵트인)</li>
-                            <li>• 기본 CRM 고도화</li>
-                        </ul>
-                    </div>
-                    <div class="border border-orange-200 bg-orange-50 p-5 rounded-xl card">
-                        <div class="bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P2 (유료 100곳 이후)</div>
-                        <ul class="text-sm space-y-2 text-gray-700">
-                            <li>• ASR 전사+요약 정식화</li>
-                            <li>• 시럽 도저/저울 검수 PoC</li>
-                            <li>• POS 정식 API 연동</li>
-                            <li>• 체인 콘솔 / 다점포 SSO</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Segments & Time Savings -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">시간 절감 효과 및 고객 타겟팅</h2>
-                <div class="overflow-x-auto rounded-lg border border-gray-200 mb-6">
-                    <table class="min-w-full text-sm text-left whitespace-nowrap">
-                        <thead class="table-head">
-                            <tr>
-                                <th class="px-4 py-3">업무 항목</th>
-                                <th class="px-4 py-3">현재 가정 (분/건)</th>
-                                <th class="px-4 py-3 text-primary">도입 후 가정 (분/건)</th>
-                                <th class="px-4 py-3 text-accent font-bold">절감 효과</th>
-                                <th class="px-4 py-3 text-gray-500">측정 방법 (파일럿)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">처방 입력 (2D/QR 시)</td><td class="px-4 py-3">0.50</td><td class="px-4 py-3 text-primary font-bold">0.33</td><td class="px-4 py-3 text-accent font-bold">10초 절감</td><td class="px-4 py-3 text-xs text-gray-500">입력 필드 수, 처리시간 로그</td></tr>
-                            <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-medium">처방 입력 (OCR 기반)</td><td class="px-4 py-3">2.00</td><td class="px-4 py-3 text-primary font-bold">0.67</td><td class="px-4 py-3 text-accent font-bold">80초 절감</td><td class="px-4 py-3 text-xs text-gray-500">추출→수정 시간, 수정률</td></tr>
-                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">상담/복약지도 생성</td><td class="px-4 py-3">0.75</td><td class="px-4 py-3 text-primary font-bold">0.25</td><td class="px-4 py-3 text-accent font-bold">30초 절감</td><td class="px-4 py-3 text-xs text-gray-500">템플릿 선택→저장 시간</td></tr>
-                            <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-medium">대체조제 사후통보</td><td class="px-4 py-3">2.00</td><td class="px-4 py-3 text-primary font-bold">0.50</td><td class="px-4 py-3 text-accent font-bold">90초 절감</td><td class="px-4 py-3 text-xs text-gray-500">사후통보 처리시간, 성공률</td></tr>
-                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">환자 알림/동의 관리</td><td class="px-4 py-3">0.50</td><td class="px-4 py-3 text-primary font-bold">0.25</td><td class="px-4 py-3 text-accent font-bold">15초 절감</td><td class="px-4 py-3 text-xs text-gray-500">발송 실패 시간, 동의 획득률</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-sm text-gray-600 bg-gray-50 p-4 rounded border-l-4 border-indigo-400">
-                    <i class="fa-solid fa-bullseye mr-2"></i><strong>타겟 세그먼트:</strong> 병원 인접 고처방 약국 (시간절감 KPI 즉시 확보) → 동네 약국 (만성/고령) → 소아과 특화 (분말/시럽) 순으로 확장.
-                </p>
-            </section>
+            <div className="flex gap-1 h-32">
+              <div className="flex-1 bg-emerald-900/50 border border-emerald-500/50 rounded flex flex-col items-center justify-center relative">
+                <span className="font-bold">도징 도크</span>
+                <span className="text-xs text-emerald-200">4~6 슬롯</span>
+              </div>
+              <div className="flex-1 bg-amber-900/50 border border-amber-500/50 rounded flex flex-col items-center justify-center relative">
+                <span className="font-bold">집진 / HEPA</span>
+                <span className="text-xs text-amber-200">음압</span>
+                <span className="absolute right-2 top-2 text-xs text-slate-400">H≈650</span>
+              </div>
+            </div>
+            <div className="bg-slate-700 border border-slate-500 rounded py-2 text-sm relative">
+              <span className="font-bold">드레인 트레이 + 배수 포트 (경사 2° 이상)</span>
+              <span className="absolute right-2 top-2 text-xs text-slate-400">H≈120</span>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-between max-w-2xl mx-auto text-xs text-slate-400 border-t border-slate-600 pt-2">
+            <span>목표 Envelope: W≈900mm</span>
+            <span>D≈650mm, 총 H≈1500mm 이하</span>
+          </div>
         </div>
+      </Card>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50"><h4 className="font-bold text-slate-800">도면 패키지 목록</h4></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr><th className="p-3">ID</th><th className="p-3">도면명</th><th className="p-3">산출물</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {DRAWING_LIST.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="p-3 font-mono text-xs">{r.id}</td>
+                    <td className="p-3 font-medium">{r.name}</td>
+                    <td className="p-3 text-slate-500">{r.out}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
-        <!-- ==========================================
-             TAB 2: 재무 & 수익모델 (Financials)
-             ========================================== -->
-        <div id="tab2" class="tab-content space-y-10">
-            
-            <!-- Revenue Models -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">수익모델: SaaS 요금제 및 HW 리스</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- SaaS Pricing -->
-                    <div>
-                        <h3 class="text-lg font-bold text-primary mb-3"><i class="fa-solid fa-cloud mr-2"></i>SaaS 구독 티어</h3>
-                        <table class="min-w-full text-sm border-collapse border border-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr><th class="border px-3 py-2 text-left">티어</th><th class="border px-3 py-2 text-right">월 구독료</th><th class="border px-3 py-2 text-left">원가 통제 핵심</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="border px-3 py-2 font-bold">Basic</td><td class="border px-3 py-2 text-right font-bold text-gray-700">149,000원</td><td class="border px-3 py-2 text-xs">LLM 최소 (템플릿 중심)</td></tr>
-                                <tr class="bg-indigo-50"><td class="border px-3 py-2 font-bold text-primary">Pro (주력)</td><td class="border px-3 py-2 text-right font-bold text-primary">299,000원</td><td class="border px-3 py-2 text-xs">토큰예산+캐시, RAG 초안</td></tr>
-                                <tr><td class="border px-3 py-2 font-bold">Automation</td><td class="border px-3 py-2 text-right font-bold text-gray-700">449,000원</td><td class="border px-3 py-2 text-xs">RPA 풀자동 금지, 예외처리</td></tr>
-                                <tr class="bg-gray-50"><td class="border px-3 py-2 font-bold">Add-on</td><td class="border px-3 py-2 text-right text-gray-600">49k~149k</td><td class="border px-3 py-2 text-xs">녹취/ASR, 추가 토큰팩</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- HW Pricing -->
-                    <div>
-                        <h3 class="text-lg font-bold text-primary mb-3"><i class="fa-solid fa-microchip mr-2"></i>저비용 하드웨어 리스</h3>
-                        <table class="min-w-full text-sm border-collapse border border-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr><th class="border px-3 py-2 text-left">장치</th><th class="border px-3 py-2 text-right">리스 (월)</th><th class="border px-3 py-2 text-left">BOM / 정책</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="border px-3 py-2 font-bold">캡처 스테이션</td><td class="border px-3 py-2 text-right text-indigo-600 font-bold">99,000원</td><td class="border px-3 py-2 text-xs">BOM 0.6~1.0M / 1년 무상</td></tr>
-                                <tr><td class="border px-3 py-2 font-bold">분쇄 로거</td><td class="border px-3 py-2 text-right text-indigo-600 font-bold">49,000원</td><td class="border px-3 py-2 text-xs">BOM 0.2~0.6M / 소모품 별도</td></tr>
-                                <tr class="bg-gray-50"><td class="border px-3 py-2 font-bold">시럽 도저</td><td class="border px-3 py-2 text-right text-gray-600">249,000원</td><td class="border px-3 py-2 text-xs">BOM 1.2~2.0M / 펌프+로드셀</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50"><h4 className="font-bold text-slate-800">분말 유동성 (Flowability) 등급 체계</h4></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr><th className="p-3">CI / HR</th><th className="p-3">등급</th><th className="p-3">운영 정책 (가정)</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {FLOWABILITY.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="p-3 font-mono text-xs">{r.index}<br/>{r.hr}</td>
+                    <td className="p-3 font-medium">{r.level}</td>
+                    <td className="p-3 text-slate-600">{r.action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
 
-            <!-- Charts Section: Budget & P&L -->
-            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- 80M Budget Chart -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card flex flex-col items-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 w-full border-b pb-2">80M KRW MVP 예산 할당</h2>
-                    <div class="w-full max-w-sm">
-                        <canvas id="budgetChart"></canvas>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4 text-center">LLM 예산은 구독/추론 통제를 통해 18M로 억제하여 개발/HW 투자를 방어함.</p>
-                </div>
-                
-                <!-- 3 Year P&L Chart -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card flex flex-col items-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 w-full border-b pb-2">3년 재무전망 (Likely 시나리오)</h2>
-                    <div class="w-full h-64">
-                        <canvas id="plChart"></canvas>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4 text-center">Year 2부터 OPEX를 총이익이 초과하여 본격적인 흑자(EBITDA +240M) 전환.</p>
-                </div>
-            </section>
-            
-            <!-- Break-even -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">손익분기 (Break-even) 분석</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-center border-collapse">
-                        <thead class="bg-indigo-50 border-y border-indigo-200">
-                            <tr><th class="py-3 px-4">시나리오</th><th class="py-3 px-4">ARPA (월)</th><th class="py-3 px-4">약국당 월 변동비</th><th class="py-3 px-4">약국당 월 총이익</th><th class="py-3 px-4">월 고정비 (OPEX)</th><th class="py-3 px-4 text-primary font-bold">손익분기 약국 수</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr><td class="py-3 px-4 font-medium">보수적</td><td class="py-3 px-4">250,000원</td><td class="py-3 px-4 text-red-500">70,000원</td><td class="py-3 px-4">180,000원</td><td class="py-3 px-4">25,000,000원</td><td class="py-3 px-4 font-bold">139곳</td></tr>
-                            <tr class="bg-gray-50"><td class="py-3 px-4 font-bold text-indigo-700">기준 (Likely)</td><td class="py-3 px-4 font-bold">330,000원</td><td class="py-3 px-4 font-bold">80,000원</td><td class="py-3 px-4 font-bold">250,000원</td><td class="py-3 px-4 font-bold">30,000,000원</td><td class="py-3 px-4 font-extrabold text-primary text-lg">120곳</td></tr>
-                            <tr><td class="py-3 px-4 font-medium">공격적</td><td class="py-3 px-4">450,000원</td><td class="py-3 px-4 text-green-600">95,000원</td><td class="py-3 px-4">355,000원</td><td class="py-3 px-4">40,000,000원</td><td class="py-3 px-4 font-bold">113곳</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-slate-50"><h4 className="font-bold text-slate-800">핵심 모듈 BOM 및 전략</h4></div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-100 text-slate-600">
+              <tr>
+                <th className="p-3 whitespace-nowrap">모듈</th>
+                <th className="p-3">기능</th>
+                <th className="p-3">BOM 구성</th>
+                <th className="p-3 whitespace-nowrap">비용 (USD 저/중/고)</th>
+                <th className="p-3">제조 전략</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {BOM_TABLE.map((r, i) => (
+                <tr key={i} className="hover:bg-slate-50">
+                  <td className="p-3 font-medium text-slate-800">{r.module}</td>
+                  <td className="p-3 text-slate-600">{r.func}</td>
+                  <td className="p-3 text-slate-500">{r.bom}</td>
+                  <td className="p-3 font-mono text-xs text-blue-600">{r.cost}</td>
+                  <td className="p-3 text-slate-500 text-xs">{r.strategy}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </Card>
+    </div>
+  );
 
-
-        <!-- ==========================================
-             TAB 3: 시스템 & 기술 (Tech & Arch)
-             ========================================== -->
-        <div id="tab3" class="tab-content space-y-10">
-            
-            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Data Flow Diagram -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card overflow-hidden">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">핵심 데이터 흐름도</h2>
-                    <div class="mermaid text-center flex justify-center w-full">
-                        flowchart TD
-                            A[처방 캡처\n2D/QR/OCR] --> B[파싱/정규화\nNER/Rule]
-                            B --> C[DUR 룰 체크]
-                            B --> D[대체조제 매핑]
-                            D --> E[심평원 사후통보\nRPA 보조]
-                            B --> F[상담/복약지도\nLLM+RAG]
-                            F --> G[약사 최종 승인\n감사로그 저장]
-                            G --> H[환자 카카오 알림\n알림톡/동의]
-                            G --> I[하드웨어\n작업지시/검수]
-                    </div>
-                </div>
-
-                <!-- Tech Stack Table -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">AI & 자동화 기술 스택</h2>
-                    <ul class="space-y-4">
-                        <li class="flex flex-col">
-                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">OCR & 파서 (NER)</strong><span class="text-xs bg-green-100 text-green-800 px-2 rounded">성숙도: 높음</span></div>
-                            <p class="text-xs text-gray-600 mt-1">상용 OCR + 커스텀 후처리로 처방전 폼 편차 극복. 규칙과 ML을 혼합하여 약품코드, 용법 구조화.</p>
-                        </li>
-                        <li class="flex flex-col">
-                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">LLM & RAG 엔진</strong><span class="text-xs bg-yellow-100 text-yellow-800 px-2 rounded">성숙도: 중간</span></div>
-                            <p class="text-xs text-gray-600 mt-1">의약품 허가/DUR DB 인덱싱을 통한 근거 기반(RAG) 답변. 비용 통제를 위한 프롬프트 제한 및 하이브리드 모델 사용.</p>
-                        </li>
-                        <li class="flex flex-col">
-                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">RPA (대체조제 통보)</strong><span class="text-xs bg-yellow-100 text-yellow-800 px-2 rounded">성숙도: 중간</span></div>
-                            <p class="text-xs text-gray-600 mt-1">헤드리스 브라우저를 통한 심평원 포털 입력 보조. 인증서/CAPTCHA 등 장애요인 대응을 위한 '사용자 주도 반자동' 구조.</p>
-                        </li>
-                        <li class="flex flex-col">
-                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">ASR & 녹취 (옵션)</strong><span class="text-xs bg-gray-100 text-gray-800 px-2 rounded">성숙도: P2 확장</span></div>
-                            <p class="text-xs text-gray-600 mt-1">분쟁 대비 증빙용. 한국어 ASR, 원본 보관+해시 무결성 검증. PIPA 법적 리스크 대응 위해 철저한 동의 UI 결합.</p>
-                        </li>
-                    </ul>
-                </div>
-            </section>
-
-            <!-- 12-Month Roadmap -->
-            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card overflow-x-auto">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">12개월 실행 로드맵 (Gantt)</h2>
-                <div class="mermaid w-full min-w-[600px]">
-                    gantt
-                        dateFormat  YYYY-MM-DD
-                        axisFormat  %m월
-                        section MVP & 설계
-                        개인정보/보안/카카오 정책 설계 :a1, 2026-03-01, 45d
-                        PO 개발 (파싱, RAG, CRM) :a2, 2026-04-01, 75d
-                        section 파일럿 검증
-                        HW PoC 및 파일럿 설치 :b1, 2026-05-15, 60d
-                        운영 계측 및 대체조제 RPA 적용 :b2, 2026-07-01, 60d
-                        section 런칭 & 확장
-                        KPI 달성 및 유료 전환 :c1, 2026-09-01, 75d
-                        v1.0 정식 런칭 및 체인 확장 :c2, 2026-11-15, 45d
-                </div>
-            </section>
-        </div>
-
-
-        <!-- ==========================================
-             TAB 4: UX/UI 인터랙션 (Interactive)
-             ========================================== -->
-        <div id="tab4" class="tab-content space-y-10 pb-20">
-            <p class="text-gray-600 bg-white p-4 rounded-lg shadow-sm border-l-4 border-indigo-400 mb-6">
-                버튼을 클릭하여 실제 VivRx OS가 어떻게 동작하는지 인터랙티브 데모를 경험해 보세요.
+  const TabSoftware = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <Card className="p-6">
+        <SectionTitle title="소프트웨어 & AI 전략" icon={<Cpu size={20} />} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-indigo-50 rounded-xl p-5 border border-indigo-100">
+            <h4 className="font-bold text-indigo-900 mb-3 flex items-center gap-2"><Database size={18}/> Recipe OS 데이터 모델</h4>
+            <ul className="space-y-2 text-sm text-indigo-800 font-mono">
+              <li><span className="font-bold text-indigo-600">Prescription:</span> 처방전(환자/기간/복용슬롯/테이퍼)</li>
+              <li><span className="font-bold text-indigo-600">DoseEvent:</span> (환자, 날짜, 슬롯, 포 번호)</li>
+              <li><span className="font-bold text-indigo-600">DoseRecipe:</span> (drug_id, target_mass, tier, hazard)</li>
+              <li><span className="font-bold text-indigo-600">Constraints:</span> 전용채널/세정등급/수세필요</li>
+            </ul>
+            <p className="mt-4 text-xs text-indigo-600 bg-white p-2 rounded">
+              * SR-zero의 RFID/바코드 매칭 오류방지 시스템 내재화
             </p>
+          </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <!-- Web Mockup -->
-                <div class="flex flex-col space-y-4">
-                    <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="fa-solid fa-desktop text-primary mr-2"></i>웹 대시보드 (처방 파싱 시스템)</h3>
-                    <div class="mockup-window flex-1 flex flex-col">
-                        <!-- Header -->
-                        <div class="bg-slate-800 text-white p-3 flex justify-between items-center text-sm">
-                            <div class="font-bold"><i class="fa-solid fa-leaf text-green-400 mr-2"></i>VivRx OS</div>
-                            <div>대기열 <strong class="text-yellow-400">6</strong>명</div>
-                        </div>
-                        
-                        <!-- Body -->
-                        <div class="p-5 flex-1 bg-white flex flex-col">
-                            <h4 class="font-bold text-gray-700 mb-2 border-b pb-1 text-sm">스캔 및 입력</h4>
-                            
-                            <!-- Scanner Input Area -->
-                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 mb-4 cursor-pointer hover:bg-indigo-50 transition" id="btn-capture" onclick="runCapture()">
-                                <i class="fa-solid fa-barcode text-3xl text-gray-400 mb-2" id="scan-icon"></i>
-                                <div class="hidden justify-center items-center mb-2" id="parse-loader">
-                                    <div class="loader"></div>
-                                </div>
-                                <p class="text-sm font-bold text-primary" id="scan-text">여기를 클릭하여 처방전 스캔 시작</p>
-                            </div>
-
-                            <!-- Parse Result (Hidden initially) -->
-                            <div id="parse-result" class="hidden opacity-0 flex-1 border border-emerald-200 bg-emerald-50 rounded-lg p-4 relative">
-                                <span class="absolute top-2 right-2 text-[10px] bg-emerald-500 text-white px-2 py-1 rounded font-bold"><i class="fa-solid fa-check mr-1"></i>파싱 성공</span>
-                                <h5 class="text-sm font-bold text-gray-800 mb-3">파싱 결과 <span class="text-xs text-gray-500 font-normal ml-1">(수정 가능)</span></h5>
-                                <div class="flex space-x-2 mb-3">
-                                    <span class="bg-white border border-gray-200 text-xs px-2 py-1 rounded">환자: <strong>김**</strong></span>
-                                    <span class="bg-white border border-gray-200 text-xs px-2 py-1 rounded text-red-600">DUR: <strong>병용금기 없음</strong></span>
-                                </div>
-                                <table class="w-full text-xs text-left">
-                                    <thead class="bg-emerald-100/50">
-                                        <tr><th class="p-1">약품명</th><th class="p-1">용량</th><th class="p-1">일수</th></tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-emerald-100">
-                                        <tr><td class="p-1 font-medium">Amlodipine 5mg</td><td class="p-1">1T / 1회</td><td class="p-1">30일</td></tr>
-                                        <tr><td class="p-1 font-medium">Metformin 500mg</td><td class="p-1">1T / 2회</td><td class="p-1">30일</td></tr>
-                                    </tbody>
-                                </table>
-                                <div class="mt-4 flex space-x-2">
-                                    <button class="flex-1 bg-white border border-primary text-primary text-xs py-1.5 rounded font-bold hover:bg-indigo-50">복약지도 템플릿</button>
-                                    <button class="flex-1 bg-primary text-white text-xs py-1.5 rounded font-bold shadow hover:bg-secondary">작업지시</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mobile Kakao Mockup -->
-                <div class="flex flex-col space-y-4">
-                    <h3 class="text-xl font-bold text-gray-800 flex items-center justify-between">
-                        <div><i class="fa-solid fa-mobile-screen text-primary mr-2"></i>카카오톡 환자 안내</div>
-                        <button onclick="runKakaoFlow()" id="btn-kakao-start" class="bg-kakao text-kakaoText text-sm px-4 py-1.5 rounded-full font-bold shadow hover:bg-yellow-400 transition"><i class="fa-solid fa-paper-plane mr-1"></i> 발송 테스트</button>
-                    </h3>
-                    
-                    <div class="mobile-mockup bg-[#b2c7d9] flex flex-col shadow-2xl">
-                        <div class="notch"></div>
-                        <!-- Kakao Header -->
-                        <div class="pt-10 pb-2 px-4 bg-[#A9BDCE] flex items-center">
-                            <i class="fa-solid fa-arrow-left text-slate-700 mr-3"></i>
-                            <div class="font-bold text-slate-800 text-lg">VivRx 약국</div>
-                        </div>
-                        
-                        <!-- Chat Area -->
-                        <div class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3" id="kakao-chat-area">
-                            <div class="text-center text-xs text-slate-500 mb-2 bg-black/10 rounded-full w-max mx-auto px-3 py-1">2026년 2월 25일</div>
-                            <!-- Initial greeting (always there) -->
-                            <div class="flex space-x-2">
-                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
-                                <div>
-                                    <div class="text-[11px] text-slate-700 mb-1 ml-1">VivRx 약국</div>
-                                    <div class="bg-white p-2.5 rounded-lg rounded-tl-none shadow-sm text-sm text-gray-800 max-w-[220px]">
-                                        안녕하세요. 처방 조제가 시작되었습니다. 조제가 완료되면 복약 안내를 보내드릴게요!
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+          <div className="bg-emerald-50 rounded-xl p-5 border border-emerald-100">
+            <h4 className="font-bold text-emerald-900 mb-3 flex items-center gap-2"><Cpu size={18}/> AI/ML 핵심 기능 (예창패 딥테크 정합)</h4>
+            <ul className="space-y-2 text-sm text-emerald-800">
+              <li><strong>예측 스케줄링 AI:</strong> 레시피 전환/세정 비용 학습 → 최적 생산 순서(가동률↑)</li>
+              <li><strong>LIW 적응형 튜닝 AI:</strong> feed factor 드리프트 학습 → 모터 자동 보정</li>
+              <li><strong>이상 감지 AI:</strong> 시계열/전류/리젝트율 기반 브리징/막힘 조기 감지</li>
+              <li><strong>잔류/건조 판정 비전:</strong> 잔류 분말/물방울 인식 → 건조 합격 게이트 자동화</li>
+            </ul>
+          </div>
         </div>
 
-    </main>
+        <h4 className="font-bold text-slate-800 mb-4">레시피 → 생산 계획 순서도 (휴리스틱)</h4>
+        <div className="overflow-x-auto bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div className="min-w-[700px] flex flex-col items-center gap-2 text-sm">
+            {/* 시각적 순서도 구현 */}
+            <div className="bg-white border-2 border-slate-300 px-4 py-2 rounded shadow-sm text-center w-64 font-medium">처방/조제 데이터 수집</div>
+            <div className="w-0.5 h-6 bg-blue-400"></div>
+            <div className="bg-white border-2 border-slate-300 px-4 py-2 rounded shadow-sm text-center w-64">기간·시간대·테이퍼 정규화</div>
+            <div className="w-0.5 h-6 bg-blue-400"></div>
+            <div className="flex gap-4 items-start">
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-100 border-2 border-blue-300 px-4 py-2 rounded shadow-sm text-center w-56 font-bold text-blue-800">포 단위 DoseEvent 생성</div>
+                <div className="w-0.5 h-6 bg-blue-400"></div>
+                <div className="bg-blue-100 border-2 border-blue-300 px-4 py-2 rounded shadow-sm text-center w-56">제약 적용 (세정/전용채널)</div>
+              </div>
+              <div className="w-12 border-t-2 border-blue-400 mt-5 relative">
+                <div className="absolute -right-1 -top-1.5 w-3 h-3 border-t-2 border-r-2 border-blue-400 transform rotate-45"></div>
+              </div>
+              <div className="bg-indigo-100 border-2 border-indigo-300 px-4 py-4 rounded shadow-sm text-center w-64">
+                <span className="font-bold block mb-1">스케줄링 AI</span>
+                <span className="text-xs">체인지오버·세정·건조 비용 최소화</span>
+              </div>
+            </div>
+            <div className="w-0.5 h-6 bg-blue-400"></div>
+            <div className="bg-white border-2 border-slate-300 px-4 py-2 rounded shadow-sm text-center w-64">실행: 도징→버퍼→포장→봉합</div>
+            <div className="w-0.5 h-6 bg-blue-400"></div>
+            <div className="bg-amber-100 border-2 border-amber-400 px-4 py-3 rounded-lg shadow-sm text-center w-64 font-bold text-amber-900 relative">
+              QA Gate (2단 계량/체크웨잉)
+              <div className="absolute -left-16 top-1/2 w-16 border-t-2 border-dashed border-red-400"></div>
+              <div className="absolute -left-16 -top-32 h-32 border-l-2 border-dashed border-red-400"></div>
+              <div className="absolute -left-16 -top-32 w-48 border-t-2 border-dashed border-red-400">
+                <span className="absolute bg-red-50 text-red-600 text-xs px-1 -top-2 left-4">Fail: 리젝트/재도징</span>
+              </div>
+            </div>
+            <div className="w-0.5 h-6 bg-green-400"></div>
+            <div className="bg-green-100 border-2 border-green-500 px-4 py-2 rounded shadow-sm text-center w-64 font-bold text-green-800">Pass: 출하/라벨/로그</div>
+          </div>
+        </div>
 
-    <script>
-        // --- 1. Tab Switching Logic ---
-        function switchTab(tabId) {
-            // Remove active classes from all tabs and buttons
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('active', 'border-primary', 'text-primary');
-                el.classList.add('border-transparent', 'text-gray-500');
-            });
+        <div className="mt-8">
+          <h4 className="font-bold text-slate-800 mb-2">LIW 제어 루프 (의사코드)</h4>
+          <p className="text-sm text-slate-600 mb-3">진동/기류/온도 격리와 디지털 필터링이 정확도에 중요합니다.</p>
+          <pre className="bg-slate-900 text-slate-300 p-4 rounded-xl text-xs md:text-sm font-mono overflow-x-auto shadow-inner">
+<span className="text-slate-500"># Pouch pulse dosing (LIW 기반)</span>
+<span className="text-blue-400">start_w</span> = loadcell_filtered()
+<span className="text-blue-400">target_w</span> = start_w - target_mass_g
+
+<span className="text-slate-500"># Bulk</span>
+<span className="text-purple-400">while</span> loadcell_filtered() {'>'} target_w + <span className="text-amber-400">5</span>*tolerance_g:
+    set_rpm(<span className="text-green-400">HIGH</span>)
+
+<span className="text-slate-500"># Trim</span>
+<span className="text-purple-400">while</span> loadcell_filtered() {'>'} target_w + tolerance_g:
+    set_rpm(<span className="text-green-400">LOW</span>)
+
+set_rpm(<span className="text-amber-400">0</span>)
+
+<span className="text-slate-500"># Verify</span>
+dispensed = start_w - loadcell_filtered()
+<span className="text-purple-400">if</span> abs(dispensed - target_mass_g) {'<='} tolerance_g:
+    <span className="text-green-400">PASS</span>
+<span className="text-purple-400">else</span>:
+    <span className="text-red-400">FAIL</span>  <span className="text-slate-500"># 리젝트/재도징/수세 요구</span>
+          </pre>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const TabQA = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 border-t-4 border-t-amber-500">
+          <SectionTitle title="2단 계량 & 리젝트 로직" icon={<Activity size={20} />} />
+          <ul className="space-y-4">
+            <li className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs shrink-0">1</div>
+              <div>
+                <strong className="block text-slate-800">1단: 실시간 계량</strong>
+                <span className="text-sm text-slate-600">도징 도크에서 LIW/로드셀을 통한 실시간 모니터링</span>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs shrink-0">2</div>
+              <div>
+                <strong className="block text-slate-800">2단: 최종 검증</strong>
+                <span className="text-sm text-slate-600">(엔트리) 샘플링 전자저울+SPC / (상위) 100% 인라인 체크웨이어. <br/>* OIML R51 / R76 정합. Auto Onedy-zero 2중 계량 참조.</span>
+              </div>
+            </li>
+            <div className="bg-red-50 p-3 rounded text-sm text-red-800 mt-2">
+              <strong>OOT 발생시:</strong> 해당 포 자동 리젝트 → 동일 이벤트 재도징 → 연속 발생 시 채널 Lock 및 세정/수세 요구
+            </div>
+          </ul>
+        </Card>
+
+        <Card className="p-6 border-t-4 border-t-cyan-500">
+          <SectionTitle title="수세 (Operator-triggered)" icon={<Box size={20} />} />
+          <p className="text-sm text-slate-600 mb-4">FDA 세정 가이드 기반, 수용성 잔류 대응용 수동 트리거 모드입니다. (분말+물=페이스트 리스크 방지)</p>
+          <ul className="space-y-2 text-sm text-slate-700">
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-cyan-500"/> <strong>인터록 조건:</strong> 카트리지 제거, 호퍼 비움, 코어 비가동</li>
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-cyan-500"/> <strong>세척 대상:</strong> 도징 슈트, 버퍼 호퍼 내벽 등 교체 불가 부품</li>
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-cyan-500"/> <strong>기구 설계:</strong> 저압 분사 노즐, 배수 트레이, R≥3mm 라운드 코너</li>
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-cyan-500"/> <strong>프로세스:</strong> 수세 완료 후 <b>"건조 모드"</b>로 자동 전환</li>
+          </ul>
+        </Card>
+      </div>
+
+      <Card className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50">
+        <SectionTitle title="무소모품 건조 모드 (Dry Pass Gate)" icon={<ShieldCheck size={20} />} />
+        <div className="flex flex-col md:flex-row gap-6 items-center mt-4">
+          <div className="flex-1 space-y-3">
+            <p className="text-sm text-slate-700">소모품(건조제) 없이 <strong>상온 공기</strong>만으로 완전 건조를 수행하고 센서로 증명합니다. (결로 회피)</p>
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+              <strong className="text-blue-800 text-sm block mb-2">건조 합격(Dry Pass) 조건:</strong>
+              <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 ml-2">
+                <li>배출 공기 RH(상대습도) 임계값 이하 안정화 (예: 35%)</li>
+                <li>슈트/호퍼 내벽 표면 온도 변화 수렴</li>
+                <li>비전/광학 센서상 물방울 패턴 60초 연속 미검출</li>
+              </ul>
+            </div>
+          </div>
+          <div className="w-full md:w-1/3 flex flex-col items-center gap-2">
+            <div className="bg-white border-2 border-slate-200 rounded-full w-24 h-24 flex items-center justify-center shadow-inner relative">
+              <Activity className="text-blue-400" size={32} />
+              <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+              <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+            <span className="font-bold text-slate-800 mt-2">Sensor Verification</span>
+            <span className="text-xs text-slate-500 text-center">온습도 + 비전 + 표면온도</span>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const TabBusiness = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="p-6 lg:col-span-1 border-l-4 border-l-green-500">
+          <SectionTitle title="수익 엔진 (BM)" icon={<DollarSign size={20} />} />
+          <p className="text-sm text-slate-600 mb-4">* DP-2C1 지정 포장지/코어 임대 선례 벤치마킹</p>
+          <div className="space-y-4">
+            <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+              <strong className="text-green-800 flex items-center gap-2"><LayoutDashboard size={16}/> 구독 (SaaS)</strong>
+              <span className="text-xs text-green-700 mt-1 block">Recipe OS (기기당 월 과금, 25만 가정)</span>
+            </div>
+            <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+              <strong className="text-amber-800 flex items-center gap-2"><Box size={16}/> 소모품 (Lock-in)</strong>
+              <span className="text-xs text-amber-700 mt-1 block">라이너/캡, 전용 필름, 세정키트, HEPA 필터</span>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+              <strong className="text-blue-800 flex items-center gap-2"><Settings size={16}/> 서비스</strong>
+              <span className="text-xs text-blue-700 mt-1 block">설치, 정기검교정, 원격모니터링 (연 8-15%)</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 lg:col-span-2">
+          <SectionTitle title="5년 손익 시뮬레이션 (Base Case)" icon={<BarChart3 size={20} />} />
+          <div className="overflow-x-auto mt-4">
+            <table className="w-full text-sm text-center">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr>
+                  <th className="p-2">연도</th><th className="p-2">신규/누적(대)</th>
+                  <th className="p-2">매출</th><th className="p-2">매출총이익</th>
+                  <th className="p-2">OPEX</th><th className="p-2">영업이익</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {PNL_TABLE.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="p-3 font-bold text-slate-700">{r.year}</td>
+                    <td className="p-3 text-slate-600">{r.sales} / {r.total}</td>
+                    <td className="p-3 font-medium text-blue-600">{r.rev}</td>
+                    <td className="p-3 text-emerald-600">{r.gp}</td>
+                    <td className="p-3 text-slate-500">{r.opex}</td>
+                    <td className={`p-3 font-bold ${r.op.includes('-') ? 'text-red-500' : 'text-blue-600'}`}>{r.op}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-slate-500 mt-3 text-center">
+            * 3년차 손익분기 근접, 4-5년차 소모품/구독 누적으로 수익성 급증 모델
+          </p>
+        </Card>
+      </div>
+
+      <Card className="p-6">
+        <SectionTitle title="단계별 로드맵 및 Go/No-Go" icon={<Activity size={20} />} />
+        <div className="relative border-l-2 border-slate-200 ml-4 mt-6 space-y-8 pb-4">
+          <div className="relative pl-6">
+            <div className="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1 shadow"></div>
+            <h4 className="font-bold text-slate-800">MVP (0-6개월)</h4>
+            <p className="text-sm text-slate-600 mt-1">도크1, 포장연동, 수세/건조, 레시피OS v1</p>
+            <div className="mt-2 inline-block bg-slate-100 px-3 py-1 rounded text-xs font-medium text-slate-700 border border-slate-200">
+              기준: 20ppm 2시간 지속, 건조 누락 0, OOT {'<'} 1%
+            </div>
+          </div>
+          <div className="relative pl-6">
+            <div className="absolute w-4 h-4 bg-amber-500 rounded-full -left-[9px] top-1 shadow"></div>
+            <h4 className="font-bold text-slate-800">Pilot (6-12개월)</h4>
+            <p className="text-sm text-slate-600 mt-1">3곳 실증, 소모품 공급망, 리젝트 자동화</p>
+            <div className="mt-2 inline-block bg-slate-100 px-3 py-1 rounded text-xs font-medium text-slate-700 border border-slate-200">
+              기준: 실효 3k포/일, 업타임 {'>'} 95%, 분진 클레임 0
+            </div>
+          </div>
+          <div className="relative pl-6">
+            <div className="absolute w-4 h-4 bg-emerald-500 rounded-full -left-[9px] top-1 shadow"></div>
+            <h4 className="font-bold text-slate-800">Scale (12-24개월)</h4>
+            <p className="text-sm text-slate-600 mt-1">3 SKU 출시, 양산 지그, 원격 진단</p>
+            <div className="mt-2 inline-block bg-slate-100 px-3 py-1 rounded text-xs font-medium text-slate-700 border border-slate-200">
+              기준: 필드 MTTR {'<'} 24h, 소모품 attach {'>'} 80%
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const TabIR = () => (
+    <div className={`space-y-6 ${animate ? 'animate-fade-in' : ''}`}>
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+          <SectionTitle title="투자자용 IR Deck (12장)" icon={<Presentation size={20} />} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+          {IR_DECK.map((slide, i) => (
+            <div key={i} className="border border-slate-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all group bg-white">
+              <h5 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors text-sm">{slide.title}</h5>
+              <p className="text-xs text-slate-600 leading-relaxed">{slide.desc}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50">
+            <h4 className="font-bold text-slate-800 flex items-center gap-2"><FileText size={18}/> 예창패 30P 사업계획서 요약</h4>
+          </div>
+          <div className="max-h-[400px] overflow-y-auto p-2">
+            {BP_PAGES.map((page, i) => (
+              <div key={i} className="p-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 flex gap-3">
+                <span className="font-mono text-xs text-blue-500 bg-blue-50 p-1 rounded h-fit shrink-0">{page.p}</span>
+                <div>
+                  <strong className="text-sm text-slate-800 block mb-1">{page.title}</strong>
+                  <span className="text-xs text-slate-600">{page.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6 border-t-4 border-t-red-500">
+          <SectionTitle title="리스크 체크리스트 및 해법" icon={<AlertTriangle size={20} />} />
+          <ul className="space-y-3 mt-4">
+            {[
+              { r: '교차오염', s: '라이너/전용 정책 + 수세/건조 + 잔류 게이트 + 정기 스와브' },
+              { r: '분진/노출', s: '음압/HEPA + 필터 소모품화 + 덕트 씰링' },
+              { r: '계량 드리프트', s: '2단 계량 + OIML 정합 검증 + AI 튜닝' },
+              { r: '수세 후 미건조', s: 'RH/표면온도/비전 기반 Dry Pass 게이트 + 결로 회피' },
+              { r: '소모품 공급망', s: '2nd 소싱 + LOT 추적' },
+              { r: '법적 포지셔닝', s: '“조제 지원 장비”로 문서화 (관할 자문)' }
+            ].map((item, i) => (
+              <li key={i} className="flex flex-col sm:flex-row gap-1 sm:gap-3 text-sm">
+                <span className="font-bold text-red-700 min-w-[100px] shrink-0">• {item.r}</span>
+                <span className="text-slate-700">{item.s}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-12">
+      {/* 헤더 네비게이션 */}
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 text-white p-1.5 rounded-lg"><Box size={24} /></div>
+              <h1 className="font-bold text-lg md:text-xl tracking-tight text-slate-800 truncate">
+                산제 자동 플랫폼 <span className="hidden sm:inline">사업화 패키지</span>
+              </h1>
+            </div>
             
-            // Add active class to target tab and button
-            document.getElementById(tabId).classList.add('active');
-            const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
-            if(clickedBtn) {
-                clickedBtn.classList.remove('border-transparent', 'text-gray-500');
-                clickedBtn.classList.add('active', 'border-primary', 'text-primary');
-            }
+            {/* 데스크톱 탭 */}
+            <nav className="hidden md:flex space-x-1">
+              {TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all
+                    ${activeTab === tab.id 
+                      ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </nav>
 
-            // Render charts if Tab 2 is clicked and not rendered yet
-            if(tabId === 'tab2' && !window.chartsRendered) {
-                renderCharts();
-                window.chartsRendered = true;
-            }
-        }
+            {/* 모바일 햄버거 메뉴 */}
+            <div className="flex md:hidden">
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-slate-600 hover:text-slate-900 focus:outline-none"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          </div>
+        </div>
 
-        // --- 2. Chart.js Render Logic ---
-        function renderCharts() {
-            // Chart 1: Budget Doughnut
-            const ctxBudget = document.getElementById('budgetChart').getContext('2d');
-            new Chart(ctxBudget, {
-                type: 'doughnut',
-                data: {
-                    labels: ['LLM/AI (18M)', '제품/개발 (26M)', 'HW PoC (10M)', '클라우드/보안 (6M)', '기타 (법무/CS 등 20M)'],
-                    datasets: [{
-                        data: [18, 26, 10, 6, 20],
-                        backgroundColor: ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#94A3B8'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Pretendard' } } } }
-                }
-            });
+        {/* 모바일 드롭다운 메뉴 */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-100 shadow-lg absolute w-full z-40 animate-fade-in">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`w-full text-left px-3 py-3 rounded-md text-base font-medium flex items-center gap-3
+                    ${activeTab === tab.id 
+                      ? 'bg-blue-50 text-blue-700' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
 
-            // Chart 2: P&L Bar/Line
-            const ctxPL = document.getElementById('plChart').getContext('2d');
-            new Chart(ctxPL, {
-                type: 'bar',
-                data: {
-                    labels: ['Year 1', 'Year 2', 'Year 3'],
-                    datasets: [
-                        { label: 'OPEX (고정비)', data: [260, 520, 820], backgroundColor: '#EF4444' },
-                        { label: 'Revenue (매출)', data: [240, 950, 2900], backgroundColor: '#6366F1' },
-                        { label: 'EBITDA (이익)', data: [-70, 240, 1500], type: 'line', borderColor: '#10B981', backgroundColor: '#10B981', borderWidth: 3, tension: 0.1 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { labels: { font: { family: 'Pretendard' } } } }
-                }
-            });
-        }
-
-        // --- 3. Interactive Web Mockup (Capture Animation) ---
-        function runCapture() {
-            const btn = document.getElementById('btn-capture');
-            const icon = document.getElementById('scan-icon');
-            const text = document.getElementById('scan-text');
-            const loader = document.getElementById('parse-loader');
-            const result = document.getElementById('parse-result');
-
-            // Reset UI
-            result.classList.add('hidden');
-            result.classList.remove('animate-fade-in', 'opacity-100');
-            icon.classList.add('hidden');
-            text.innerText = "스캐너로 바코드 판독 중...";
-            loader.classList.remove('hidden');
-            loader.classList.add('flex');
-            btn.classList.add('pointer-events-none');
-
-            // Simulate parsing delay
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                loader.classList.remove('flex');
-                icon.classList.remove('hidden');
-                icon.className = "fa-solid fa-check-circle text-3xl text-green-500 mb-2";
-                text.innerText = "입력 완료";
-                text.className = "text-sm font-bold text-green-600";
-                
-                // Show Result
-                result.classList.remove('hidden');
-                result.classList.add('animate-fade-in');
-                
-                setTimeout(() => { btn.classList.remove('pointer-events-none'); }, 500);
-            }, 1200);
-        }
-
-        // --- 4. Interactive Kakao Mockup (Chat flow) ---
-        let isKakaoRunning = false;
-        function runKakaoFlow() {
-            if(isKakaoRunning) return;
-            isKakaoRunning = true;
-            
-            const btn = document.getElementById('btn-kakao-start');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 발송 중';
-            btn.classList.add('opacity-50', 'pointer-events-none');
-
-            const chatArea = document.getElementById('kakao-chat-area');
-            
-            // 1. Add typing indicator
-            const typingHTML = `
-                <div class="flex space-x-2 animate-fade-in" id="typing-indicator">
-                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
-                    <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm flex space-x-1 items-center h-10 w-16">
-                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
-                    </div>
-                </div>`;
-            chatArea.insertAdjacentHTML('beforeend', typingHTML);
-            chatArea.scrollTop = chatArea.scrollHeight;
-
-            // 2. Remove typing & Add real message after 1.5s
-            setTimeout(() => {
-                const typingEl = document.getElementById('typing-indicator');
-                if(typingEl) typingEl.remove();
-
-                const msgHTML = `
-                    <div class="flex space-x-2 animate-fade-in">
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
-                        <div>
-                            <div class="text-[11px] text-slate-700 mb-1 ml-1">VivRx 약국</div>
-                            <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm text-sm text-gray-800 max-w-[240px]">
-                                <div class="border-b border-gray-100 pb-2 mb-2 font-bold text-[13px]"><i class="fa-solid fa-pills text-primary"></i> 복약 안내 도착</div>
-                                <p class="mb-2 text-[12px]">김**님, 조제 의약품 복용 안내입니다.</p>
-                                <div class="bg-gray-50 p-2 rounded text-[11px] mb-2 border border-gray-100">
-                                    <span class="block font-bold text-gray-700">1일 1회 식사무관</span>
-                                    <span class="block text-gray-500">어지럼증 주의, 단것 섭취</span>
-                                </div>
-                                <div class="space-y-1 mt-3">
-                                    <button class="w-full bg-gray-100 py-1.5 rounded text-[11px] font-medium border border-gray-200">전자 복약지도서 보기</button>
-                                    <button class="w-full bg-kakao py-1.5 rounded text-[11px] font-bold">동의 및 수신관리</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                chatArea.insertAdjacentHTML('beforeend', msgHTML);
-                chatArea.scrollTop = chatArea.scrollHeight;
-                
-                // Reset Button
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i> 재발송';
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                isKakaoRunning = false;
-            }, 1500);
-        }
-    </script>
-</body>
-</html>
+      {/* 메인 컨텐츠 영역 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {activeTab === 'summary' && <TabSummary />}
+        {activeTab === 'architecture' && <TabArchitecture />}
+        {activeTab === 'software' && <TabSoftware />}
+        {activeTab === 'qa' && <TabQA />}
+        {activeTab === 'business' && <TabBusiness />}
+        {activeTab === 'ir' && <TabIR />}
+      </main>
+    </div>
+  );
+}
 
