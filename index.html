@@ -3,282 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VivRx OS - by VivLeoN</title>
+    <title>VivRx OS - Smart Pharmacy Operating System</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Mermaid.js -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { sans: ['"Pretendard"', 'sans-serif'] },
                     colors: { 
-                        primary: '#4F46E5', // Indigo 600
-                        secondary: '#4338CA', // Indigo 700
-                        accent: '#F59E0B', // Amber 500
-                        kakao: '#FEE500',
-                        kakaoText: '#191919'
+                        primary: '#4F46E5', secondary: '#4338CA', 
+                        accent: '#10B981', background: '#F8FAFC',
+                        kakao: '#FEE500', kakaoText: '#191919'
                     }
                 }
             }
         }
-        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#e0e7ff', primaryTextColor: '#3730a3', primaryBorderColor: '#4f46e5', lineColor: '#4f46e5' } });
+        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { primaryColor: '#EEF2FF', primaryTextColor: '#3730A3', primaryBorderColor: '#4F46E5', lineColor: '#4F46E5' } });
     </script>
+    
     <style>
-        body { scroll-behavior: smooth; background-color: #f8fafc; }
-        .nav-link:hover { color: #4F46E5; transition: color 0.3s ease; }
-        .table-header { background-color: #4F46E5; color: white; }
-        .card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
-        .mockup-container { background: #e2e8f0; padding: 1rem; border-radius: 1rem; border: 8px solid #cbd5e1; }
-        .mobile-mockup { width: 320px; background: #fff; border-radius: 2rem; border: 12px solid #334155; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); margin: 0 auto; height: 600px;}
-        .mobile-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #334155; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; z-index: 10;}
+        body { background-color: #F8FAFC; color: #334155; }
+        
+        /* Tab transition logic to maintain dimensions for charts/mermaid */
+        .tab-content { position: absolute; visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out; }
+        .tab-content.active { position: relative; visibility: visible; opacity: 1; height: auto; overflow: visible; }
+        
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08); }
+        .table-head { background-color: #EEF2FF; color: #3730A3; font-weight: 600; }
+        
+        /* Mockup Styles */
+        .mockup-window { background: #F1F5F9; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .mobile-mockup { width: 320px; height: 620px; background: #fff; border-radius: 35px; border: 12px solid #1E293B; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); margin: 0 auto; }
+        .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1E293B; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 20; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        
+        /* Loading Spinner */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #4F46E5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-gray-800 font-sans antialiased">
+<body class="antialiased font-sans">
 
-    <nav class="fixed w-64 h-screen bg-white shadow-xl flex flex-col hidden md:flex z-50 border-r border-gray-100">
-        <div class="p-6 bg-gradient-to-r from-primary to-secondary text-white">
-            <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-leaf mr-2"></i> VivRx OS</h1>
-            <p class="text-xs text-indigo-200 mt-1">Project Team. VivLeoN</p>
-        </div>
-        <div class="flex-1 overflow-y-auto py-4">
-            <ul class="space-y-1 px-4 text-sm font-medium text-gray-600">
-                <li class="uppercase text-xs text-gray-400 font-bold mb-2 mt-4 px-2">문서 개요</li>
-                <li><a href="#exec-summary" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-chart-line w-5"></i> Executive Summary</a></li>
-                <li><a href="#problems" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-triangle-exclamation w-5"></i> 문제 정의 & 솔루션</a></li>
-                <li><a href="#scope" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-list-check w-5"></i> 스코프 & 고객 세그먼트</a></li>
-                <li><a href="#pricing" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-tags w-5"></i> 수익모델 및 재무전망</a></li>
-                
-                <li class="uppercase text-xs text-gray-400 font-bold mb-2 mt-6 px-2">시스템 설계</li>
-                <li><a href="#data-flow" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-project-diagram w-5"></i> 데이터 흐름도</a></li>
-                <li><a href="#roadmap" class="nav-link block py-2 px-2 rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-timeline w-5"></i> 12개월 로드맵</a></li>
-                <li><a href="#ui-design" class="nav-link block py-2 px-2 rounded-lg bg-indigo-50 text-primary font-bold"><i class="fa-solid fa-desktop w-5"></i> UI/UX 목업 디자인</a></li>
-            </ul>
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center space-x-2 text-primary">
+                        <i class="fa-solid fa-leaf text-2xl"></i>
+                        <span class="font-extrabold text-2xl tracking-tight">VivRx OS</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex md:space-x-8" id="tab-nav">
+                        <button onclick="switchTab('tab1')" class="tab-btn active border-primary text-primary border-b-2 px-1 pt-1 text-sm font-bold transition-colors">비전 & 사업전략</button>
+                        <button onclick="switchTab('tab2')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">재무 & 수익모델</button>
+                        <button onclick="switchTab('tab3')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">기술 & 시스템 설계</button>
+                        <button onclick="switchTab('tab4')" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 px-1 pt-1 text-sm font-medium transition-colors">UX/UI 인터랙션</button>
+                    </div>
+                </div>
+                <div class="flex items-center text-sm font-medium text-gray-500">
+                    Team <strong class="text-primary ml-1">VivLeoN</strong> 
+                    <span class="mx-2">|</span> v1.1
+                </div>
+            </div>
         </div>
     </nav>
 
-    <main class="md:ml-64 p-8 min-h-screen">
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <header class="bg-white rounded-2xl shadow-sm p-10 mb-10 border-t-4 border-primary relative overflow-hidden">
-            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-100 rounded-full opacity-50 blur-2xl"></div>
-            <h1 class="text-4xl font-extrabold text-gray-900 mb-2 relative z-10">VivRx OS <span class="text-2xl font-medium text-gray-500 ml-2">스마트 약국 운영 시스템</span></h1>
-            <p class="text-lg text-gray-600 mb-6 relative z-10">한국 약국 업무시간 절감형 AI·자동화 SaaS + 저비용 HW 통합 사업계획서</p>
-            <div class="flex space-x-3 text-sm text-gray-500 relative z-10">
-                <span class="bg-indigo-100 text-indigo-800 py-1.5 px-4 rounded-full font-semibold"><i class="fa-solid fa-users mr-1"></i> Team VivLeoN</span>
-                <span class="bg-gray-100 py-1.5 px-4 rounded-full"><i class="fa-solid fa-code-branch mr-1"></i> v1.1</span>
-                <span class="bg-gray-100 py-1.5 px-4 rounded-full"><i class="fa-regular fa-calendar mr-1"></i> 2026-02-25</span>
-            </div>
+        <!-- Header Section (Always visible) -->
+        <header class="bg-gradient-to-r from-indigo-600 to-indigo-800 rounded-2xl shadow-lg p-8 mb-8 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl"></div>
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-3 relative z-10">한국 약국 업무시간 절감형 AI·자동화 SaaS + 저비용 HW</h1>
+            <p class="text-indigo-100 text-lg md:text-xl max-w-3xl relative z-10">반복 입력, 포털 전환, 컴플라이언스 문서화 부담을 축소하여 약국의 처리량(Throughput)과 분쟁 대응력을 동시에 높이는 통합 솔루션 사업계획</p>
         </header>
 
-        <section id="ui-design" class="mb-12">
-            <div class="flex items-center justify-between mb-8 border-b-2 border-gray-200 pb-2">
-                <h2 class="text-3xl font-bold text-gray-800"><i class="fa-solid fa-wand-magic-sparkles text-primary mr-2"></i>UI/UX 목업 디자인</h2>
-                <span class="text-sm text-gray-500">웹/태블릿 OS 및 모바일 앱 화면</span>
-            </div>
+        <!-- ==========================================
+             TAB 1: 비전 & 사업전략 (Overview & Strategy)
+             ========================================== -->
+        <div id="tab1" class="tab-content active space-y-10">
             
-            <p class="text-gray-600 mb-8 bg-white p-4 rounded-lg shadow-sm border-l-4 border-indigo-400">
-                [span_1](start_span)기존 문서의 텍스트 와이어프레임을 바탕으로, 실제 약국 환경에서 약사와 환자가 경험하게 될 <strong>VivRx OS</strong>의 핵심 화면들을 시각화했습니다[span_1](end_span).
+            <!-- Executive Summary & Problem -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center border-b pb-2"><i class="fa-solid fa-lightbulb text-accent mr-2"></i>Executive Summary</h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        기존 약국 청구/조제 프로그램을 '대체'하는 것이 아닌, <strong>처방전 입력·대체조제 사후통보·복약지도 기록·환자 안내를 업무 흐름(Workflow) 단위로 '오버레이(overlay)'</strong>하여 시간을 절감하는 운영OS 입니다.
+                    </p>
+                    <ul class="space-y-3 text-sm text-gray-700">
+                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>입력/검증:</strong> QR/2D 문자열 수신 + OCR fallback으로 재입력 최소화</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>보고/증빙:</strong> 대체조제 사후통보 반자동 패키지로 누락 리스크 축소</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>상담/기록:</strong> RAG 기반 복약지도 템플릿 + 조제기록부 저장 SOP화</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-primary mt-1 mr-2"></i><strong>분쟁 대비:</strong> 상담 음성 녹취 및 전사(옵트인)로 법적 분쟁 방어력 상승</li>
+                    </ul>
+                </section>
+                
+                <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card border-t-4 border-t-red-500">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center border-b pb-2"><i class="fa-solid fa-triangle-exclamation text-red-500 mr-2"></i>현장의 문제점 정의</h2>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">대체조제 비효율:</strong> 내부 프로그램 → 엑셀 추출 → 심평원 포털 업로드 → 증빙 보관의 다중 전환 발생.</li>
+                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">입력 비용 발생:</strong> QR/2D가 있더라도 재사용이 어려우면 추가 수기 입력 비용 발생.</li>
+                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">복약지도 분쟁:</strong> 상담을 수행했음에도 명확한 '기록/증빙' 부재 시 환자 클레임 및 분쟁 비용 증가.</li>
+                        <li class="bg-red-50 p-3 rounded-lg"><strong class="text-red-700">조제 리스크:</strong> 분말/시럽 조제 시 기록·검수 체계 부재로 인한 오투약 리스크 존재.</li>
+                    </ul>
+                </section>
+            </div>
+
+            <!-- Scope (P0/P1/P2) -->
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">기능 스코프 (P0/P1/P2)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="border border-indigo-200 bg-indigo-50 p-5 rounded-xl card">
+                        <div class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P0 (반드시/MVP)</div>
+                        <ul class="text-sm space-y-2 text-gray-700">
+                            <li>• 처방 자동입력 (QR/2D + OCR/NER)</li>
+                            <li>• 상담기록/복약지도 (템플릿+RAG 초안)</li>
+                            <li>• 대체조제 엑셀 생성+반자동 업로드</li>
+                            <li>• 환자 안내 (알림톡, 동의 관리)</li>
+                            <li>• 기본 감사로그/권한/보관정책</li>
+                        </ul>
+                    </div>
+                    <div class="border border-emerald-200 bg-emerald-50 p-5 rounded-xl card">
+                        <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P1 (유료 30~50곳)</div>
+                        <ul class="text-sm space-y-2 text-gray-700">
+                            <li>• 세미 RPA (포털 입력 시간 추가 절감)</li>
+                            <li>• 캡처 스테이션 리스 모델 론칭</li>
+                            <li>• ASR 도입 ('녹취만' 우선, 전사는 옵트인)</li>
+                            <li>• 기본 CRM 고도화</li>
+                        </ul>
+                    </div>
+                    <div class="border border-orange-200 bg-orange-50 p-5 rounded-xl card">
+                        <div class="bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mb-3">P2 (유료 100곳 이후)</div>
+                        <ul class="text-sm space-y-2 text-gray-700">
+                            <li>• ASR 전사+요약 정식화</li>
+                            <li>• 시럽 도저/저울 검수 PoC</li>
+                            <li>• POS 정식 API 연동</li>
+                            <li>• 체인 콘솔 / 다점포 SSO</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Segments & Time Savings -->
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">시간 절감 효과 및 고객 타겟팅</h2>
+                <div class="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+                    <table class="min-w-full text-sm text-left whitespace-nowrap">
+                        <thead class="table-head">
+                            <tr>
+                                <th class="px-4 py-3">업무 항목</th>
+                                <th class="px-4 py-3">현재 가정 (분/건)</th>
+                                <th class="px-4 py-3 text-primary">도입 후 가정 (분/건)</th>
+                                <th class="px-4 py-3 text-accent font-bold">절감 효과</th>
+                                <th class="px-4 py-3 text-gray-500">측정 방법 (파일럿)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">처방 입력 (2D/QR 시)</td><td class="px-4 py-3">0.50</td><td class="px-4 py-3 text-primary font-bold">0.33</td><td class="px-4 py-3 text-accent font-bold">10초 절감</td><td class="px-4 py-3 text-xs text-gray-500">입력 필드 수, 처리시간 로그</td></tr>
+                            <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-medium">처방 입력 (OCR 기반)</td><td class="px-4 py-3">2.00</td><td class="px-4 py-3 text-primary font-bold">0.67</td><td class="px-4 py-3 text-accent font-bold">80초 절감</td><td class="px-4 py-3 text-xs text-gray-500">추출→수정 시간, 수정률</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">상담/복약지도 생성</td><td class="px-4 py-3">0.75</td><td class="px-4 py-3 text-primary font-bold">0.25</td><td class="px-4 py-3 text-accent font-bold">30초 절감</td><td class="px-4 py-3 text-xs text-gray-500">템플릿 선택→저장 시간</td></tr>
+                            <tr class="bg-gray-50 hover:bg-gray-100"><td class="px-4 py-3 font-medium">대체조제 사후통보</td><td class="px-4 py-3">2.00</td><td class="px-4 py-3 text-primary font-bold">0.50</td><td class="px-4 py-3 text-accent font-bold">90초 절감</td><td class="px-4 py-3 text-xs text-gray-500">사후통보 처리시간, 성공률</td></tr>
+                            <tr class="hover:bg-gray-50"><td class="px-4 py-3 font-medium">환자 알림/동의 관리</td><td class="px-4 py-3">0.50</td><td class="px-4 py-3 text-primary font-bold">0.25</td><td class="px-4 py-3 text-accent font-bold">15초 절감</td><td class="px-4 py-3 text-xs text-gray-500">발송 실패 시간, 동의 획득률</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-600 bg-gray-50 p-4 rounded border-l-4 border-indigo-400">
+                    <i class="fa-solid fa-bullseye mr-2"></i><strong>타겟 세그먼트:</strong> 병원 인접 고처방 약국 (시간절감 KPI 즉시 확보) → 동네 약국 (만성/고령) → 소아과 특화 (분말/시럽) 순으로 확장.
+                </p>
+            </section>
+        </div>
+
+
+        <!-- ==========================================
+             TAB 2: 재무 & 수익모델 (Financials)
+             ========================================== -->
+        <div id="tab2" class="tab-content space-y-10">
+            
+            <!-- Revenue Models -->
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">수익모델: SaaS 요금제 및 HW 리스</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- SaaS Pricing -->
+                    <div>
+                        <h3 class="text-lg font-bold text-primary mb-3"><i class="fa-solid fa-cloud mr-2"></i>SaaS 구독 티어</h3>
+                        <table class="min-w-full text-sm border-collapse border border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr><th class="border px-3 py-2 text-left">티어</th><th class="border px-3 py-2 text-right">월 구독료</th><th class="border px-3 py-2 text-left">원가 통제 핵심</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="border px-3 py-2 font-bold">Basic</td><td class="border px-3 py-2 text-right font-bold text-gray-700">149,000원</td><td class="border px-3 py-2 text-xs">LLM 최소 (템플릿 중심)</td></tr>
+                                <tr class="bg-indigo-50"><td class="border px-3 py-2 font-bold text-primary">Pro (주력)</td><td class="border px-3 py-2 text-right font-bold text-primary">299,000원</td><td class="border px-3 py-2 text-xs">토큰예산+캐시, RAG 초안</td></tr>
+                                <tr><td class="border px-3 py-2 font-bold">Automation</td><td class="border px-3 py-2 text-right font-bold text-gray-700">449,000원</td><td class="border px-3 py-2 text-xs">RPA 풀자동 금지, 예외처리</td></tr>
+                                <tr class="bg-gray-50"><td class="border px-3 py-2 font-bold">Add-on</td><td class="border px-3 py-2 text-right text-gray-600">49k~149k</td><td class="border px-3 py-2 text-xs">녹취/ASR, 추가 토큰팩</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- HW Pricing -->
+                    <div>
+                        <h3 class="text-lg font-bold text-primary mb-3"><i class="fa-solid fa-microchip mr-2"></i>저비용 하드웨어 리스</h3>
+                        <table class="min-w-full text-sm border-collapse border border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr><th class="border px-3 py-2 text-left">장치</th><th class="border px-3 py-2 text-right">리스 (월)</th><th class="border px-3 py-2 text-left">BOM / 정책</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="border px-3 py-2 font-bold">캡처 스테이션</td><td class="border px-3 py-2 text-right text-indigo-600 font-bold">99,000원</td><td class="border px-3 py-2 text-xs">BOM 0.6~1.0M / 1년 무상</td></tr>
+                                <tr><td class="border px-3 py-2 font-bold">분쇄 로거</td><td class="border px-3 py-2 text-right text-indigo-600 font-bold">49,000원</td><td class="border px-3 py-2 text-xs">BOM 0.2~0.6M / 소모품 별도</td></tr>
+                                <tr class="bg-gray-50"><td class="border px-3 py-2 font-bold">시럽 도저</td><td class="border px-3 py-2 text-right text-gray-600">249,000원</td><td class="border px-3 py-2 text-xs">BOM 1.2~2.0M / 펌프+로드셀</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section: Budget & P&L -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 80M Budget Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card flex flex-col items-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 w-full border-b pb-2">80M KRW MVP 예산 할당</h2>
+                    <div class="w-full max-w-sm">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center">LLM 예산은 구독/추론 통제를 통해 18M로 억제하여 개발/HW 투자를 방어함.</p>
+                </div>
+                
+                <!-- 3 Year P&L Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card flex flex-col items-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 w-full border-b pb-2">3년 재무전망 (Likely 시나리오)</h2>
+                    <div class="w-full h-64">
+                        <canvas id="plChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center">Year 2부터 OPEX를 총이익이 초과하여 본격적인 흑자(EBITDA +240M) 전환.</p>
+                </div>
+            </section>
+            
+            <!-- Break-even -->
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">손익분기 (Break-even) 분석</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-center border-collapse">
+                        <thead class="bg-indigo-50 border-y border-indigo-200">
+                            <tr><th class="py-3 px-4">시나리오</th><th class="py-3 px-4">ARPA (월)</th><th class="py-3 px-4">약국당 월 변동비</th><th class="py-3 px-4">약국당 월 총이익</th><th class="py-3 px-4">월 고정비 (OPEX)</th><th class="py-3 px-4 text-primary font-bold">손익분기 약국 수</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr><td class="py-3 px-4 font-medium">보수적</td><td class="py-3 px-4">250,000원</td><td class="py-3 px-4 text-red-500">70,000원</td><td class="py-3 px-4">180,000원</td><td class="py-3 px-4">25,000,000원</td><td class="py-3 px-4 font-bold">139곳</td></tr>
+                            <tr class="bg-gray-50"><td class="py-3 px-4 font-bold text-indigo-700">기준 (Likely)</td><td class="py-3 px-4 font-bold">330,000원</td><td class="py-3 px-4 font-bold">80,000원</td><td class="py-3 px-4 font-bold">250,000원</td><td class="py-3 px-4 font-bold">30,000,000원</td><td class="py-3 px-4 font-extrabold text-primary text-lg">120곳</td></tr>
+                            <tr><td class="py-3 px-4 font-medium">공격적</td><td class="py-3 px-4">450,000원</td><td class="py-3 px-4 text-green-600">95,000원</td><td class="py-3 px-4">355,000원</td><td class="py-3 px-4">40,000,000원</td><td class="py-3 px-4 font-bold">113곳</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+
+        <!-- ==========================================
+             TAB 3: 시스템 & 기술 (Tech & Arch)
+             ========================================== -->
+        <div id="tab3" class="tab-content space-y-10">
+            
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Data Flow Diagram -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card overflow-hidden">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">핵심 데이터 흐름도</h2>
+                    <div class="mermaid text-center flex justify-center w-full">
+                        flowchart TD
+                            A[처방 캡처\n2D/QR/OCR] --> B[파싱/정규화\nNER/Rule]
+                            B --> C[DUR 룰 체크]
+                            B --> D[대체조제 매핑]
+                            D --> E[심평원 사후통보\nRPA 보조]
+                            B --> F[상담/복약지도\nLLM+RAG]
+                            F --> G[약사 최종 승인\n감사로그 저장]
+                            G --> H[환자 카카오 알림\n알림톡/동의]
+                            G --> I[하드웨어\n작업지시/검수]
+                    </div>
+                </div>
+
+                <!-- Tech Stack Table -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">AI & 자동화 기술 스택</h2>
+                    <ul class="space-y-4">
+                        <li class="flex flex-col">
+                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">OCR & 파서 (NER)</strong><span class="text-xs bg-green-100 text-green-800 px-2 rounded">성숙도: 높음</span></div>
+                            <p class="text-xs text-gray-600 mt-1">상용 OCR + 커스텀 후처리로 처방전 폼 편차 극복. 규칙과 ML을 혼합하여 약품코드, 용법 구조화.</p>
+                        </li>
+                        <li class="flex flex-col">
+                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">LLM & RAG 엔진</strong><span class="text-xs bg-yellow-100 text-yellow-800 px-2 rounded">성숙도: 중간</span></div>
+                            <p class="text-xs text-gray-600 mt-1">의약품 허가/DUR DB 인덱싱을 통한 근거 기반(RAG) 답변. 비용 통제를 위한 프롬프트 제한 및 하이브리드 모델 사용.</p>
+                        </li>
+                        <li class="flex flex-col">
+                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">RPA (대체조제 통보)</strong><span class="text-xs bg-yellow-100 text-yellow-800 px-2 rounded">성숙도: 중간</span></div>
+                            <p class="text-xs text-gray-600 mt-1">헤드리스 브라우저를 통한 심평원 포털 입력 보조. 인증서/CAPTCHA 등 장애요인 대응을 위한 '사용자 주도 반자동' 구조.</p>
+                        </li>
+                        <li class="flex flex-col">
+                            <div class="flex items-center justify-between"><strong class="text-primary text-sm">ASR & 녹취 (옵션)</strong><span class="text-xs bg-gray-100 text-gray-800 px-2 rounded">성숙도: P2 확장</span></div>
+                            <p class="text-xs text-gray-600 mt-1">분쟁 대비 증빙용. 한국어 ASR, 원본 보관+해시 무결성 검증. PIPA 법적 리스크 대응 위해 철저한 동의 UI 결합.</p>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 12-Month Roadmap -->
+            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card overflow-x-auto">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">12개월 실행 로드맵 (Gantt)</h2>
+                <div class="mermaid w-full min-w-[600px]">
+                    gantt
+                        dateFormat  YYYY-MM-DD
+                        axisFormat  %m월
+                        section MVP & 설계
+                        개인정보/보안/카카오 정책 설계 :a1, 2026-03-01, 45d
+                        PO 개발 (파싱, RAG, CRM) :a2, 2026-04-01, 75d
+                        section 파일럿 검증
+                        HW PoC 및 파일럿 설치 :b1, 2026-05-15, 60d
+                        운영 계측 및 대체조제 RPA 적용 :b2, 2026-07-01, 60d
+                        section 런칭 & 확장
+                        KPI 달성 및 유료 전환 :c1, 2026-09-01, 75d
+                        v1.0 정식 런칭 및 체인 확장 :c2, 2026-11-15, 45d
+                </div>
+            </section>
+        </div>
+
+
+        <!-- ==========================================
+             TAB 4: UX/UI 인터랙션 (Interactive)
+             ========================================== -->
+        <div id="tab4" class="tab-content space-y-10 pb-20">
+            <p class="text-gray-600 bg-white p-4 rounded-lg shadow-sm border-l-4 border-indigo-400 mb-6">
+                버튼을 클릭하여 실제 VivRx OS가 어떻게 동작하는지 인터랙티브 데모를 경험해 보세요.
             </p>
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <!-- Web Mockup -->
                 <div class="flex flex-col space-y-4">
-                    [span_2](start_span)<h3 class="text-xl font-bold text-gray-700 flex items-center"><span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">1</span> 홈 대시보드 & 대기열[span_2](end_span)</h3>
-                    <div class="mockup-container shadow-lg">
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col">
-                            <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
-                                <div class="font-bold"><i class="fa-solid fa-leaf text-green-400 mr-2"></i>VivRx OS</div>
-                                <div class="flex space-x-4 text-sm">
-                                    <span class="bg-slate-700 px-3 py-1 rounded-full">오늘 처방 <strong class="text-green-400">187</strong>건</span>
-                                    <span class="bg-slate-700 px-3 py-1 rounded-full">대기 <strong class="text-yellow-400">6</strong>명</span>
-                                    <span class="bg-slate-700 px-3 py-1 rounded-full">대체조제 <strong class="text-red-400">4</strong>건</span>
-                                </div>
-                            </div>
-                            <div class="p-4 bg-slate-50 border-b border-gray-200 flex space-x-3">
-                                <button class="flex-1 bg-primary text-white py-2 rounded shadow hover:bg-secondary transition"><i class="fa-solid fa-camera mr-2"></i>처방 캡처</button>
-                                <button class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded shadow-sm hover:bg-gray-50 transition"><i class="fa-solid fa-qrcode mr-2"></i>QR/2D 입력대기</button>
-                                <button class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded shadow-sm hover:bg-gray-50 transition"><i class="fa-solid fa-keyboard mr-2"></i>수기 입력</button>
-                            </div>
-                            <div class="p-4 flex-1">
-                                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">환자 대기열</h4>
-                                <ul class="space-y-3">
-                                    <li class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:border-primary transition cursor-pointer">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="bg-blue-100 text-blue-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">김</div>
-                                            <div>
-                                                <p class="font-bold text-gray-800">김** <span class="text-xs text-gray-500 font-normal ml-1">(67세, 남)</span></p>
-                                                <div class="flex space-x-2 mt-1">
-                                                    <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">고혈압</span>
-                                                    <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded">당뇨</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button class="text-primary hover:text-secondary text-sm font-medium px-3 py-1 border border-indigo-200 rounded">열기 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></button>
-                                    </li>
-                                    <li class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:border-primary transition cursor-pointer">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="bg-green-100 text-green-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">이</div>
-                                            <div>
-                                                <p class="font-bold text-gray-800">이** <span class="text-xs text-gray-500 font-normal ml-1">(4세, 여)</span></p>
-                                                <div class="flex space-x-2 mt-1">
-                                                    <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">소아/시럽</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button class="text-primary hover:text-secondary text-sm font-medium px-3 py-1 border border-indigo-200 rounded">열기 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></button>
-                                    </li>
-                                </ul>
-                            </div>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="fa-solid fa-desktop text-primary mr-2"></i>웹 대시보드 (처방 파싱 시스템)</h3>
+                    <div class="mockup-window flex-1 flex flex-col">
+                        <!-- Header -->
+                        <div class="bg-slate-800 text-white p-3 flex justify-between items-center text-sm">
+                            <div class="font-bold"><i class="fa-solid fa-leaf text-green-400 mr-2"></i>VivRx OS</div>
+                            <div>대기열 <strong class="text-yellow-400">6</strong>명</div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col space-y-4">
-                    [span_3](start_span)<h3 class="text-xl font-bold text-gray-700 flex items-center"><span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span> 처방 캡처 및 자동 파싱[span_3](end_span)</h3>
-                    <div class="mockup-container shadow-lg">
-                        <div class="bg-white rounded-lg shadow-sm h-full p-5 flex flex-col relative">
-                            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg w-max mb-4">
-                                <button class="px-4 py-1.5 bg-white shadow-sm rounded-md text-sm font-bold text-primary">2D/QR</button>
-                                <button class="px-4 py-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium">이미지/OCR</button>
-                                <button class="px-4 py-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium">PDF</button>
-                            </div>
+                        
+                        <!-- Body -->
+                        <div class="p-5 flex-1 bg-white flex flex-col">
+                            <h4 class="font-bold text-gray-700 mb-2 border-b pb-1 text-sm">스캔 및 입력</h4>
                             
-                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 mb-4 h-24">
-                                <p class="text-gray-400 text-sm mb-2"><i class="fa-solid fa-barcode text-lg mr-2"></i>스캐너로 바코드를 읽어주세요</p>
-                                <div class="flex space-x-2">
-                                    <button class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">스캔/촬영</button>
-                                    <button class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">문자열 붙여넣기</button>
+                            <!-- Scanner Input Area -->
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 mb-4 cursor-pointer hover:bg-indigo-50 transition" id="btn-capture" onclick="runCapture()">
+                                <i class="fa-solid fa-barcode text-3xl text-gray-400 mb-2" id="scan-icon"></i>
+                                <div class="hidden justify-center items-center mb-2" id="parse-loader">
+                                    <div class="loader"></div>
                                 </div>
+                                <p class="text-sm font-bold text-primary" id="scan-text">여기를 클릭하여 처방전 스캔 시작</p>
                             </div>
 
-                            <div class="flex-1 bg-white border border-indigo-100 rounded-lg shadow-inner p-4 relative">
-                                <div class="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl-lg rounded-tr-lg font-bold"><i class="fa-solid fa-check mr-1"></i>파싱 완료</div>
-                                <h4 class="text-sm font-bold text-gray-700 mb-2 border-b pb-1">파싱 결과 <span class="font-normal text-xs text-gray-400 ml-1">(수정 가능)</span></h4>
-                                <div class="mb-3">
-                                    <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded mr-2">환자: <strong class="text-gray-900">김**</strong></span>
-                                    <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">연락처: <strong class="text-gray-900">010-****-1234</strong> <span class="text-red-500 text-[10px] ml-1">(미동의)</span></span>
+                            <!-- Parse Result (Hidden initially) -->
+                            <div id="parse-result" class="hidden opacity-0 flex-1 border border-emerald-200 bg-emerald-50 rounded-lg p-4 relative">
+                                <span class="absolute top-2 right-2 text-[10px] bg-emerald-500 text-white px-2 py-1 rounded font-bold"><i class="fa-solid fa-check mr-1"></i>파싱 성공</span>
+                                <h5 class="text-sm font-bold text-gray-800 mb-3">파싱 결과 <span class="text-xs text-gray-500 font-normal ml-1">(수정 가능)</span></h5>
+                                <div class="flex space-x-2 mb-3">
+                                    <span class="bg-white border border-gray-200 text-xs px-2 py-1 rounded">환자: <strong>김**</strong></span>
+                                    <span class="bg-white border border-gray-200 text-xs px-2 py-1 rounded text-red-600">DUR: <strong>병용금기 없음</strong></span>
                                 </div>
-                                <table class="w-full text-xs text-left text-gray-600 mb-4 border-collapse">
-                                    <thead class="bg-gray-50 border-y border-gray-200">
-                                        <tr><th class="py-1 px-2 font-medium">약품명</th><th class="py-1 px-2 font-medium">투여량</th><th class="py-1 px-2 font-medium">횟수</th><th class="py-1 px-2 font-medium">일수</th></tr>
+                                <table class="w-full text-xs text-left">
+                                    <thead class="bg-emerald-100/50">
+                                        <tr><th class="p-1">약품명</th><th class="p-1">용량</th><th class="p-1">일수</th></tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100">
-                                        <tr><td class="py-1.5 px-2 font-medium text-gray-800">Amlodipine 5mg</td><td class="py-1.5 px-2">1T</td><td class="py-1.5 px-2">1회/일</td><td class="py-1.5 px-2">30일</td></tr>
-                                        <tr><td class="py-1.5 px-2 font-medium text-gray-800">Metformin 500mg</td><td class="py-1.5 px-2">1T</td><td class="py-1.5 px-2">2회/일</td><td class="py-1.5 px-2">30일</td></tr>
+                                    <tbody class="divide-y divide-emerald-100">
+                                        <tr><td class="p-1 font-medium">Amlodipine 5mg</td><td class="p-1">1T / 1회</td><td class="p-1">30일</td></tr>
+                                        <tr><td class="p-1 font-medium">Metformin 500mg</td><td class="p-1">1T / 2회</td><td class="p-1">30일</td></tr>
                                     </tbody>
                                 </table>
-                            </div>
-
-                            <div class="mt-4 flex space-x-2">
-                                <button class="flex-1 bg-white border border-primary text-primary py-2 rounded text-sm font-bold hover:bg-indigo-50"><i class="fa-solid fa-shield-virus mr-1"></i> DUR 체크</button>
-                                <button class="flex-1 bg-orange-100 text-orange-700 py-2 rounded text-sm font-bold hover:bg-orange-200">대체조제 필요</button>
-                                <button class="flex-1 bg-primary text-white py-2 rounded text-sm font-bold shadow hover:bg-secondary"><i class="fa-solid fa-file-invoice mr-1"></i> 작업지시</button>
+                                <div class="mt-4 flex space-x-2">
+                                    <button class="flex-1 bg-white border border-primary text-primary text-xs py-1.5 rounded font-bold hover:bg-indigo-50">복약지도 템플릿</button>
+                                    <button class="flex-1 bg-primary text-white text-xs py-1.5 rounded font-bold shadow hover:bg-secondary">작업지시</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Mobile Kakao Mockup -->
                 <div class="flex flex-col space-y-4">
-                    [span_4](start_span)<h3 class="text-xl font-bold text-gray-700 flex items-center"><span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span> 상담/복약지도 & 증빙[span_4](end_span)</h3>
-                    <div class="mockup-container shadow-lg">
-                        <div class="bg-white rounded-lg shadow-sm h-full p-5 flex flex-col">
-                            
-                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
-                                <h4 class="font-bold text-gray-800">복약지도 모드</h4>
-                                <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 text-xs font-medium">표준 템플릿</button>
-                                    <button class="px-3 py-1 bg-white shadow-sm rounded text-xs font-bold text-primary flex items-center"><i class="fa-solid fa-wand-magic-sparkles mr-1 text-purple-500"></i>LLM 자동요약</button>
-                                    <button class="px-3 py-1 text-gray-500 hover:text-gray-700 text-xs font-medium flex items-center"><i class="fa-solid fa-microphone mr-1"></i>ASR 녹취</button>
-                                </div>
-                            </div>
-
-                            <div class="flex space-x-2 mb-4">
-                                <span class="bg-red-50 border border-red-200 text-red-700 text-xs px-2 py-1 rounded flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 고령</span>
-                                <span class="bg-orange-50 border border-orange-200 text-orange-700 text-xs px-2 py-1 rounded flex items-center"><i class="fa-solid fa-pills mr-1"></i> 다약제</span>
-                                <span class="bg-yellow-50 border border-yellow-200 text-yellow-700 text-xs px-2 py-1 rounded flex items-center"><i class="fa-solid fa-kidneys mr-1"></i> 신장주의</span>
-                            </div>
-
-                            <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4 text-xs">
-                                <div class="font-bold text-indigo-800 mb-1 flex items-center justify-between">
-                                    <span><i class="fa-solid fa-book-medical mr-1"></i> RAG 근거 패널</span>
-                                    <a href="#" class="text-primary hover:underline">허가사항 / DUR 확인</a>
-                                </div>
-                                <p class="text-gray-600">병용금기 사항 없음. 연령 금기 해당 없음. (출처: 심평원 DUR API)</p>
-                            </div>
-
-                            <div class="flex-1 border border-gray-200 rounded-lg p-3 mb-4 bg-gray-50 relative">
-                                <div class="absolute top-2 right-2 text-gray-400 hover:text-primary cursor-pointer"><i class="fa-solid fa-pen"></i></div>
-                                <h5 class="text-xs font-bold text-gray-500 mb-2">상담 요약 (환자 발송용 초안)</h5>
-                                <ul class="text-sm text-gray-800 space-y-1 ml-4 list-disc marker:text-primary">
-                                    <li>매일 일정한 시간에 식사와 관계없이 복용하세요.</li>
-                                    <li>초기 복용 시 어지러움이 있을 수 있으니 일어날 때 천천히 일어나세요.</li>
-                                    <li>저혈당 증상(식은땀, 떨림) 발생 시 사탕 등 단 것을 섭취하세요.</li>
-                                </ul>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2 mt-auto">
-                                <button class="col-span-2 bg-slate-800 text-white py-2 rounded text-sm font-bold shadow hover:bg-slate-700 mb-2"><i class="fa-solid fa-check-double mr-1"></i> 약사 최종 승인 & 조제기록 저장</button>
-                                <button class="bg-white border border-gray-300 text-gray-700 py-2 rounded text-sm font-bold hover:bg-gray-50"><i class="fa-solid fa-print mr-1"></i> 라벨/QR 출력</button>
-                                <button class="bg-kakao text-kakaoText py-2 rounded text-sm font-bold shadow-sm hover:bg-yellow-400"><i class="fa-solid fa-comment mr-1"></i> 환자 안내 발송</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col space-y-4">
-                    [span_5](start_span)<h3 class="text-xl font-bold text-gray-700 flex items-center"><span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">4</span> 환자 카카오톡 알림 플로우[span_5](end_span)</h3>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center justify-between">
+                        <div><i class="fa-solid fa-mobile-screen text-primary mr-2"></i>카카오톡 환자 안내</div>
+                        <button onclick="runKakaoFlow()" id="btn-kakao-start" class="bg-kakao text-kakaoText text-sm px-4 py-1.5 rounded-full font-bold shadow hover:bg-yellow-400 transition"><i class="fa-solid fa-paper-plane mr-1"></i> 발송 테스트</button>
+                    </h3>
                     
-                    <div class="mobile-mockup bg-gray-100 flex flex-col">
-                        <div class="mobile-notch"></div>
-                        <div class="h-10 bg-[#A9BDCE] flex justify-between items-end px-4 pb-1 text-[10px] text-slate-700 font-medium">
-                            <span>12:00</span>
-                            <div class="flex space-x-1">
-                                <i class="fa-solid fa-signal"></i>
-                                <i class="fa-solid fa-wifi"></i>
-                                <i class="fa-solid fa-battery-full"></i>
-                            </div>
-                        </div>
-                        <div class="bg-[#A9BDCE] px-4 py-3 flex items-center space-x-3">
-                            <i class="fa-solid fa-arrow-left text-slate-700"></i>
+                    <div class="mobile-mockup bg-[#b2c7d9] flex flex-col shadow-2xl">
+                        <div class="notch"></div>
+                        <!-- Kakao Header -->
+                        <div class="pt-10 pb-2 px-4 bg-[#A9BDCE] flex items-center">
+                            <i class="fa-solid fa-arrow-left text-slate-700 mr-3"></i>
                             <div class="font-bold text-slate-800 text-lg">VivRx 약국</div>
                         </div>
                         
-                        <div class="flex-1 bg-[#b2c7d9] p-4 overflow-y-auto space-y-4 flex flex-col">
-                            <div class="text-center text-xs text-slate-500 mb-2 bg-black/10 rounded-full w-max mx-auto px-3 py-1">2026년 2월 25일 수요일</div>
-                            
+                        <!-- Chat Area -->
+                        <div class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3" id="kakao-chat-area">
+                            <div class="text-center text-xs text-slate-500 mb-2 bg-black/10 rounded-full w-max mx-auto px-3 py-1">2026년 2월 25일</div>
+                            <!-- Initial greeting (always there) -->
                             <div class="flex space-x-2">
-                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm"><i class="fa-solid fa-leaf"></i></div>
-                                <div class="flex-1">
-                                    <div class="text-xs text-slate-700 mb-1 ml-1">VivRx 약국</div>
-                                    <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm text-sm text-gray-800">
-                                        <div class="border-b border-gray-100 pb-2 mb-2">
-                                            <p class="font-bold">💊 조제 의약품 복용 안내</p>
-                                        </div>
-                                        <p class="mb-3">김**님, 오늘 조제 받으신 의약품의 복용 안내입니다.</p>
-                                        
-                                        <div class="bg-gray-50 p-2 rounded text-xs mb-3 space-y-1">
-                                            <p><strong>[복용 스케줄]</strong></p>
-                                            <p>✔️ 1일 1회 식사무관 (1알)</p>
-                                            <p>✔️ 1일 2회 아침/저녁 식후 (1알)</p>
-                                        </div>
-                                        
-                                        <div class="bg-red-50 p-2 rounded text-xs text-red-800 mb-3">
-                                            <p><strong>[주의사항 요약]</strong></p>
-                                            <p>어지럼증 주의, 저혈당 발생 시 단음식 섭취</p>
-                                        </div>
-                                        
-                                        <div class="space-y-2 mt-4">
-                                            <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded text-xs font-medium border border-gray-200 transition">📄 전자 복약지도서 보기</button>
-                                            <button class="w-full bg-kakao hover:bg-yellow-400 text-kakaoText py-2 rounded text-xs font-bold transition shadow-sm">✅ 알림톡/마케팅 수신 동의하기</button>
-                                            <div class="flex space-x-2">
-                                                <button class="flex-1 bg-white hover:bg-gray-50 text-gray-700 py-2 rounded text-xs font-medium border border-gray-200 transition">복용 완료</button>
-                                                <button class="flex-1 bg-white hover:bg-gray-50 text-gray-700 py-2 rounded text-xs font-medium border border-gray-200 transition">상담원 연결</button>
-                                            </div>
-                                        </div>
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
+                                <div>
+                                    <div class="text-[11px] text-slate-700 mb-1 ml-1">VivRx 약국</div>
+                                    <div class="bg-white p-2.5 rounded-lg rounded-tl-none shadow-sm text-sm text-gray-800 max-w-[220px]">
+                                        안녕하세요. 처방 조제가 시작되었습니다. 조제가 완료되면 복약 안내를 보내드릴게요!
                                     </div>
-                                    <div class="text-[10px] text-slate-500 mt-1 ml-1">오전 11:30</div>
                                 </div>
                             </div>
                         </div>
@@ -286,16 +437,168 @@
                 </div>
 
             </div>
-        </section>
-        
-        <footer class="mt-16 pt-8 border-t border-gray-200 text-center text-sm text-gray-500 pb-8">
-            <div class="flex justify-center items-center space-x-2 mb-2 text-primary text-xl">
-                <i class="fa-solid fa-leaf"></i><span class="font-bold tracking-tight">VivRx OS</span>
-            </div>
-            <p>프로젝트팀 <strong class="text-gray-700">VivLeoN</strong> | 문서 버전: v1.1 | 작성일: 2026-02-25</p>
-            <p class="mt-2 text-xs">본 페이지는 첨부된 사업계획서 및 심층 리서치 문서 데이터를 바탕으로 구성된 HTML 데모입니다.</p>
-        </footer>
+        </div>
+
     </main>
 
+    <script>
+        // --- 1. Tab Switching Logic ---
+        function switchTab(tabId) {
+            // Remove active classes from all tabs and buttons
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'border-primary', 'text-primary');
+                el.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Add active class to target tab and button
+            document.getElementById(tabId).classList.add('active');
+            const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+            if(clickedBtn) {
+                clickedBtn.classList.remove('border-transparent', 'text-gray-500');
+                clickedBtn.classList.add('active', 'border-primary', 'text-primary');
+            }
+
+            // Render charts if Tab 2 is clicked and not rendered yet
+            if(tabId === 'tab2' && !window.chartsRendered) {
+                renderCharts();
+                window.chartsRendered = true;
+            }
+        }
+
+        // --- 2. Chart.js Render Logic ---
+        function renderCharts() {
+            // Chart 1: Budget Doughnut
+            const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+            new Chart(ctxBudget, {
+                type: 'doughnut',
+                data: {
+                    labels: ['LLM/AI (18M)', '제품/개발 (26M)', 'HW PoC (10M)', '클라우드/보안 (6M)', '기타 (법무/CS 등 20M)'],
+                    datasets: [{
+                        data: [18, 26, 10, 6, 20],
+                        backgroundColor: ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#94A3B8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Pretendard' } } } }
+                }
+            });
+
+            // Chart 2: P&L Bar/Line
+            const ctxPL = document.getElementById('plChart').getContext('2d');
+            new Chart(ctxPL, {
+                type: 'bar',
+                data: {
+                    labels: ['Year 1', 'Year 2', 'Year 3'],
+                    datasets: [
+                        { label: 'OPEX (고정비)', data: [260, 520, 820], backgroundColor: '#EF4444' },
+                        { label: 'Revenue (매출)', data: [240, 950, 2900], backgroundColor: '#6366F1' },
+                        { label: 'EBITDA (이익)', data: [-70, 240, 1500], type: 'line', borderColor: '#10B981', backgroundColor: '#10B981', borderWidth: 3, tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { labels: { font: { family: 'Pretendard' } } } }
+                }
+            });
+        }
+
+        // --- 3. Interactive Web Mockup (Capture Animation) ---
+        function runCapture() {
+            const btn = document.getElementById('btn-capture');
+            const icon = document.getElementById('scan-icon');
+            const text = document.getElementById('scan-text');
+            const loader = document.getElementById('parse-loader');
+            const result = document.getElementById('parse-result');
+
+            // Reset UI
+            result.classList.add('hidden');
+            result.classList.remove('animate-fade-in', 'opacity-100');
+            icon.classList.add('hidden');
+            text.innerText = "스캐너로 바코드 판독 중...";
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            btn.classList.add('pointer-events-none');
+
+            // Simulate parsing delay
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+                icon.classList.remove('hidden');
+                icon.className = "fa-solid fa-check-circle text-3xl text-green-500 mb-2";
+                text.innerText = "입력 완료";
+                text.className = "text-sm font-bold text-green-600";
+                
+                // Show Result
+                result.classList.remove('hidden');
+                result.classList.add('animate-fade-in');
+                
+                setTimeout(() => { btn.classList.remove('pointer-events-none'); }, 500);
+            }, 1200);
+        }
+
+        // --- 4. Interactive Kakao Mockup (Chat flow) ---
+        let isKakaoRunning = false;
+        function runKakaoFlow() {
+            if(isKakaoRunning) return;
+            isKakaoRunning = true;
+            
+            const btn = document.getElementById('btn-kakao-start');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 발송 중';
+            btn.classList.add('opacity-50', 'pointer-events-none');
+
+            const chatArea = document.getElementById('kakao-chat-area');
+            
+            // 1. Add typing indicator
+            const typingHTML = `
+                <div class="flex space-x-2 animate-fade-in" id="typing-indicator">
+                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm flex space-x-1 items-center h-10 w-16">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                    </div>
+                </div>`;
+            chatArea.insertAdjacentHTML('beforeend', typingHTML);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // 2. Remove typing & Add real message after 1.5s
+            setTimeout(() => {
+                const typingEl = document.getElementById('typing-indicator');
+                if(typingEl) typingEl.remove();
+
+                const msgHTML = `
+                    <div class="flex space-x-2 animate-fade-in">
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-bold shadow-sm shrink-0 text-sm"><i class="fa-solid fa-leaf"></i></div>
+                        <div>
+                            <div class="text-[11px] text-slate-700 mb-1 ml-1">VivRx 약국</div>
+                            <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm text-sm text-gray-800 max-w-[240px]">
+                                <div class="border-b border-gray-100 pb-2 mb-2 font-bold text-[13px]"><i class="fa-solid fa-pills text-primary"></i> 복약 안내 도착</div>
+                                <p class="mb-2 text-[12px]">김**님, 조제 의약품 복용 안내입니다.</p>
+                                <div class="bg-gray-50 p-2 rounded text-[11px] mb-2 border border-gray-100">
+                                    <span class="block font-bold text-gray-700">1일 1회 식사무관</span>
+                                    <span class="block text-gray-500">어지럼증 주의, 단것 섭취</span>
+                                </div>
+                                <div class="space-y-1 mt-3">
+                                    <button class="w-full bg-gray-100 py-1.5 rounded text-[11px] font-medium border border-gray-200">전자 복약지도서 보기</button>
+                                    <button class="w-full bg-kakao py-1.5 rounded text-[11px] font-bold">동의 및 수신관리</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                chatArea.insertAdjacentHTML('beforeend', msgHTML);
+                chatArea.scrollTop = chatArea.scrollHeight;
+                
+                // Reset Button
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i> 재발송';
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                isKakaoRunning = false;
+            }, 1500);
+        }
+    </script>
 </body>
 </html>
+
